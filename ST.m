@@ -203,9 +203,9 @@ else
 end
 
 if isfield(options,'T_0')
-    T_0 = options.T_0;
+    T_60 = options.T_0;
 else
-    T_0 = 15.0;  % [éC]
+    T_60 = 15.0;  % [éC]
 end
 
 if isfield(options,'TpinchSub')
@@ -239,9 +239,12 @@ else
 end
 
 if isfield(options,'eta_SiT')
-     eta_SiT = options.eta_SiT;
+     eta_SiT_HP = options.eta_SiT(1);
+     eta_SiT_others = options.eta_SiT(2);
+     
 else
-     eta_SiT = 0.9;  % [-] A MODIFIER , PLUSIEURS VALEURS ? DIFFERENTS PAR TURBINE ?
+     eta_SiT_HP = 0.9;  % [-] A MODIFIER , PLUSIEURS VALEURS ? DIFFERENTS PAR TURBINE ?
+     eta_SiT_others = 0.92; % on considère rendement égale pour les turbines MP et BP
 end
 
 if P_e == null 
@@ -271,41 +274,77 @@ numEtat = 7+reheat+nsout;
 
 DAT= zeros(6,20);
 
-%%%%%%%%%%%%%%% ETAT 30 %%%%%%%%%%%%%%% Sortie chaudière
+%%%%%%%%%%%%%%% ETAT 30 %%%%%%%%%%%%%%% 
+
+% Sortie chaudière
 T_30 = T_max;
 p_30 = p3_hp;
-h_30 = Xsteam('h_pT',p_30,T_30);
-s_30 = Xsteam('s_pT',p_30,T_30);
-%x_30 = Xsteam('x_ph',p_30,h_30);
+h_30 = XSteam('h_pT',p_30,T_30);
+s_30 = XSteam('s_pT',p_30,T_30);
+%x_30 = XSteam('x_ph',p_30,h_30); = 1 car vapeur surchauffée
 e_30 = exergie(h_30,s_30);
 
-%%%%%%%%%%%%%%% ETAT 40S + 40  %%%%%%%%%%%%%%%
-% Sortie de la turbine HP (40) dans cas isentropique (40s) et réel (40) si
-% pas de resurchauffe
-if reheat == 0
-     s_40s = s_30;
-     T_40s = T_cond_out;
-     T_40 = T_cond_out;
-     x_40s = (s_40s - Xsteam('sL_T',T_40s)) / (Xsteam('sV_T',T_40s) - Xsteam('sL_T',T_40s)) ;
-     h_40s = (x_40s*Xsteam('hV_T',T_40s)) + ((1-x_40s)*Xsteam('hL_T',T_40s));
-     h_40 = (h_30 - eta_SiT)* (h_30-h_40s) ;
-     x_40 = (h_40 - Xsteam('hL_T',T_40s)) / (Xsteam('sL_T',T_40s) - Xsteam('hL_T',T_40s));
-     s_40 = (x_40*Xsteam('sV_T',T_40)) + ((1-x_40)*Xsteam('sL_T',T_40));
-     e_40 = exergie(h_40,s_40);
-     p_40 = Xsteam('p_hs',h_40,s_40);
-end
 
-%%%%%%%%%%%%%%% ETAT 41 %%%%%%%%%%%%%%%
-% Sortie de la turbine HP dans cas d'une resurchauffe
+
+%%%%%%%%%%%%%%%% Si resurchauffe %%%%%%%%%%%%%%%
 if reheat == 1
-    p_41 = p_3; %la pression apres la resurchauffe
-    T_41 = T_30;
-    h_41 = Xsteam('h_pT',p_41,T_41);
-    s_41 = Xsteam('s_pT',p_41,T_41);
-    x_41 = Xsteam('x_ph',p_41,h_41);
-    e_41 = exergie(h_41,s_41);
-end
+    %%%%%%%%%%%%%%% ETAT 40 %%%%%%%%%%%%%%%
+    % Sortie de la turbine HP dans cas d'une resurchauffe
+    p_40 = p_3; % car surchauffe isobare
+    s_40s = s_30;
+    x_40s = XSteam('x_ps',p_40,s_40s);
+    h_40s = XSteam('h_ps',p_40,s_40s);
+    
+    h_40 = h_30 - eta_SiT_HP * (h_30-h_40s);
+    s_40 = XSteam('s_ph',p_40,h_40);
+    x_40 = XSteam('x_ps',p_40,s_40);
+    T_40 = XSteam('T_ph',p_40,h_40);
+    e_40 = exergie(h_40,s_40);
+    
+    %%%%%%%%%%%%%%% ETAT 50 %%%%%%%%%%%%%%%
+    % Entrée de la turbine MP dans le cas d'une resurchauffe
+    
+    p_50 = p_3; %la pression apres la resurchauffe
+    T_50 = T_30;
+    h_50 = XSteam('h_pT',p_50,T_50);
+    s_50 = XSteam('s_pT',p_50,T_50);
+    %x_50 = XSteam('x_ph',p_50,h_50); = 1 car vapeur surchauffée
+    e_50 = exergie(h_50,s_50);
+    
+    %%%%%%%%%%%%%%% ETAT 60 %%%%%%%%%%%%%%%
+    % Sortie de la turbine BP dans cas isentropique (60s) et réel (60)
+    s_60s = s_50;
+    T_60s = T_cond_out + TpinchCond;
+    T_60 = T_cond_out + TpinchCond;
+    p_60 = XSteam('psat_T',T_60);
+    x_60s = XSsteam('x_ps',p_60,s_60s);
+    h_60s = XSteam('h_Tx',T_60s,x_60s);
+    
+    h_60 = h_50 - eta_SiT_others * (h_50-h_60s) ;
+    x_60 = XSteam('x_ph',p_60,h_60);
+    s_60 = XSteam('s_ph',p_60,h_60);
+    e_60 = exergie(h_60,s_60);
 
+%%%%%%%%%%%%%%%% Si pas resurchauffe %%%%%%%%%%%%%%%
+elseif reheat == 0
+    %%%%%%%%%%%%%%% ETAT 60S + 60  %%%%%%%%%%%%%%%
+    % Sortie de la turbine BP (60) dans cas isentropique (60s) et réel (60)
+    
+    s_60s = s_30;
+    T_60s = T_cond_out + TpinchCond;
+    T_60 = T_cond_out + TpinchCond;
+    p_60 = XSteam('psat_T',T_60);
+    x_60s = XSsteam('x_ps',p_60,s_60s);
+    %x_40s = (s_40s - XSteam('sL_T',T_40s)) / (XSteam('sV_T',T_40s) - XSteam('sL_T',T_40s)) ;
+    h_60s = XSteam('h_Tx',T_60s,x_60s);
+    %h_40s = (x_40s*XSteam('hV_T',T_40s)) + ((1-x_40s)*XSteam('hL_T',T_40s));
+    h_60 = h_30 - eta_SiT_HP * eta_SiT_others * (h_30-h_60s) ;
+    x_60 = XSteam('x_ph',p_60,h_60);
+    %x_40 = (h_40 - XSteam('hL_T',T_40s)) / (XSteam('hV_T',T_40s) - XSteam('hL_T',T_40s));
+    s_60 = XSteam('s_ph',p_60,h_60);
+    %s_40 = (x_40*XSteam('sV_T',T_40)) + ((1-x_40)*XSteam('sL_T',T_40));
+    e_60 = exergie(h_60,s_60);
+end
 
 
 
