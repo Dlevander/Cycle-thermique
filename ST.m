@@ -274,9 +274,15 @@ numEtat = 7+reheat+nsout;
 
 DAT= zeros(6,20);
 
+%%%%%%%%%%%%%%% ETAT 22 - 21 %%%%%%%%%%%%%%%
+p_22= p3_hp;% surchauffe isobare
+T_22= XSteam('Tsat_p',p_22);% Tsat
+T_21 = T_22; % evaporation isoterme
+h_21 = XSteam('hL_T',T_21);
+
 %%%%%%%%%%%%%%% ETAT 30 %%%%%%%%%%%%%%% 
 
-% Sortie chaudière
+% Sortie chaudiere
 T_30 = T_max;
 p_30 = p3_hp;
 h_30 = XSteam('h_pT',p_30,T_30);
@@ -308,7 +314,7 @@ if reheat == 1
     T_50 = T_30;
     h_50 = XSteam('h_pT',p_50,T_50);
     s_50 = XSteam('s_pT',p_50,T_50);
-    %x_50 = XSteam('x_ph',p_50,h_50); = 1 car vapeur surchauffée
+    %x_50 = XSteam('x_ph',p_50,h_50); = 1 car vapeur surchauffee
     e_50 = exergie(h_50,s_50);
     
     %%%%%%%%%%%%%%% ETAT 60 %%%%%%%%%%%%%%%
@@ -378,6 +384,8 @@ elseif nsout>0
     x_80=XSteam('x_ph',p_80,h_80);
     e_80=exergie(h_80,s_80);
     
-
-
+    %%%%%%%%% Calcul henthalpie Soutirage etat 91 %%%%%%%%
+    h6_temp = linspace(h_70,h21,(nsout+2));
+    h6 = h6_temp(2:length(h6_temp)-1);
+    
 end
