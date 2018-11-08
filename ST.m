@@ -273,13 +273,14 @@ DATEX = zeros(7,1);
 numEtat = 7+reheat+nsout;
 
 DAT= zeros(6,20);
+%% Calcul
 
 %%%%%%%%%%%%%%% ETAT 22 - 21 %%%%%%%%%%%%%%%
 p_22= p3_hp;% surchauffe isobare
 T_22= XSteam('Tsat_p',p_22);% Tsat
 T_21 = T_22; % evaporation isoterme
 h_21 = XSteam('hL_T',T_21);
-
+p_21 = XSteam('psat_T',T_21);
 %%%%%%%%%%%%%%% ETAT 30 %%%%%%%%%%%%%%% 
 
 % Sortie chaudiere
@@ -354,7 +355,7 @@ end
 
 
     %%%%%%%%%%%%%%% ETAT 70 %%%%%%%%%%%%%%%
-    %Sortie du condenseur, liquide saturé
+    %Sortie du condenseur, liquide sature
     T_70 = T_60; %car passe simplement de vapeur a liquide saturé
     h_70 = XSteam('hL_T',T_70);
     p_70 = XSteam('psat_T',T_70);
@@ -375,17 +376,73 @@ elseif nsout>0
     %S'il y a un ou plusieurs soutirages
     
     %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
-    %Après la pompe Pe, de rendement isentropique option.eta_SiC
-    p_80 = ??? %j'ai demandé à l'assistant
-    h_is = XSteam('h_ps',p_80,s_70); %h dans le cas isentropique
-    h_80=h_70+option.eta_SiC*(h_is-h_70);%h en prenant compte rendement is
+    %Apres la pompe Pe, de rendement isentropique option.eta_SiC
+    p_80 = ??? %j'ai demande a� l'assistant
+    h_80s = XSteam('h_ps',p_80,s_70); %h dans le cas isentropique
+    h_80=h_70+option.eta_SiC*(h_80s-h_70);%h en prenant compte rendement is
     s_80=XSteam('s_ph',p_80,h_80);
     T_80=XSteam('T_ph',p_80,h_80);
     x_80=XSteam('x_ph',p_80,h_80);
     e_80=exergie(h_80,s_80);
     
+    %%%%%%%%% Calcul henthalpie Soutirage etat 61s et 61 %%%%%%%%
+    % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
+    
+    h6s_temp = linspace(h_60s,h_50s,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
+    h6s = h6_temp(2:length(h6s_temp)-1);
+    s_60 = s_50;
+    p6s = zeros(1,length(h6s));
+    
+    for i=1:length(h6s)
+        p6s(i) = XSteam('p_hs',h6s(i),s_60); % XSteam, pas de vecteur en arg
+    end
+    p6 = p6s; %hypothese 
+    h6=h_50+option.eta_SiC*(h_6s-h_50);
+    
+    % l'echangeur en sortie de HP a son etat deja defini
+    h6 = [h6 h_40];
+    p6 = [p6 p_40];
+    
+    for i=1:length(h6)-1 % l'etat 40 est deja defini
+        T6(i) = XSteam('T_hs',h6(i),s_60);
+        x6(i) = XSteam('x_ph',p6(i),h6(i));
+        e6(i) = exergie(h6(i),s_60);
+    end
+    
+    %%%%%%%%% Calcul etat R %%%%%%%%%%
+    % la plus haute temp sera la premiere de la turbine MP
+    
+    %% Degasification
+    
+    
+    
+    %%%%%%%%% Calcul etat 7x %%%%%%%%%%
+    p7 = p6; % on considere les vannes de detente apres les etats 7
+    
+    % les temperature de condensation sont les temp de sortie des echangeur
+    for i=1:length(p7)
+        T7(i) = XSteam('Tsat_p',p7(i));
+        if T7(i) >= 393.15
+            % calcul de la pression dans le degazificateur
+            T_degaz = T7(i);
+            p_degaz = p7(i); %temperature avant la pompe pb  
+        end
+    end
+    
+     
     %%%%%%%%% Calcul henthalpie Soutirage etat 91 %%%%%%%%
-    h6_temp = linspace(h_70,h21,(nsout+2));
-    h6 = h6_temp(2:length(h6_temp)-1);
+    h9_temp = linspace(h_70,h21,(nsout+2));
+    h9 = h9_temp(2:length(h9_temp)-1);
+    
+    %%%%%%%%% Calcul etat  10 %%%%%%%%%%
+    x_10 = 0; % entierement liquide
+    T_10 = T7(length(T7)-1)-TpinchEx;
+    p_10 = XSteam('psat_T',T_10);
+    h_10 = XSteam('hL_T',T_10);
+    s_10 = XSteam('sL_T',T_10);
+    e_10 = exergie(h_10,h_10);
+    
+    %%%%%%%%% Calcul etat  20 %%%%%%%%%%
+    p_20 = p_21; %hypothese
     
 end
