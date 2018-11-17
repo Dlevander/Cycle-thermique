@@ -377,7 +377,7 @@ elseif nsout>0
     
     %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
     %Apres la pompe Pe, de rendement isentropique option.eta_SiC
-    p_80 = ??? %j'ai demande a  l'assistant
+    p_80 = p_degaz ;
     h_80s = XSteam('h_ps',p_80,s_70); %h dans le cas isentropique
     h_80=h_70+option.eta_SiC*(h_80s-h_70);%h en prenant compte rendement is
     s_80=XSteam('s_ph',p_80,h_80);
@@ -420,12 +420,14 @@ elseif nsout>0
     p7 = p6; % on considere les vannes de detente apres les etats 7
     
     % les temperature de condensation sont les temp de sortie des echangeur
+    flag = 0; 
     for i=1:length(p7) 
         T7(i) = XSteam('Tsat_p',p7(i));
-        if T7(i) >= 393.15
+        if T7(i) >= 393.15 && flag==0 %flag pour s'assurer que ce ne soit pas létat avec la temp max qui soit retenu mais bien celui juste au dessus de 120°C
             % calcul de la pression dans le degazificateur
             T_degaz = T7(i);
-            p_degaz = p7(i); %temperature avant la pompe pb  
+            p_degaz = p7(i); %temperature avant la pompe pb 
+            flag = 1;
         end
     end
     
@@ -439,11 +441,13 @@ elseif nsout>0
     for i = 1:length(p9)
         if T7(i)<=393.15
             p9(i) = p_degaz;
-        else
+        else p9(i) = 100; %hypothèse tirée du livre
         end
-        T9(i) = T7(i) %si on considere des echangeurs parfaits
+        T9(i) = T7(i)-TPinchEx %si on considere des echangeurs parfaits
+        h9(i) = XSteam('h_pT',p9(i),T9(i));
+        s9(i) = XSteam('s_pT',p9(i),T9(i);
+        e9(i) = exergie(h9(i),s9(i));    
     end
-    
     
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
     x_10 = 0; % entierement liquide
@@ -455,5 +459,11 @@ elseif nsout>0
     
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
     p_20 = p_21; %hypothese
+    h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
+    h_20=h_10+option.eta_SiC*(h_20s-h_10);%h en prenant compte rendement is
+    s_20=XSteam('s_ph',p_20,h_20);
+    T_20=XSteam('T_ph',p_20,h_20);
+    x_20=XSteam('x_ph',p_20,h_20);
+    e_20=exergie(h_20,s_20);
     
 end
