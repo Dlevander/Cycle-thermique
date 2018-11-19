@@ -428,6 +428,7 @@ elseif nsout>0
             T_degaz = T7(i);
             p_degaz = p7(i); %temperature avant la pompe pb 
             flag = 1;
+            d = i ;
         end
     end
     
@@ -438,16 +439,35 @@ elseif nsout>0
     
     %%%%%%%%% Calcul des etat 9x %%%%%%%%
     p9 = zeros(1,length(h9));
-    for i = 1:length(p9)
-        if T7(i)<=393.15
+    for i = 2:length(p9)
+        if i<d
             p9(i) = p_degaz;
-        else p9(i) = 100; %hypothèse tirée du livre
+        else p9(i) = p_10;
         end
         T9(i) = T7(i)-TPinchEx %si on considere des echangeurs parfaits
         h9(i) = XSteam('h_pT',p9(i),T9(i));
         s9(i) = XSteam('s_pT',p9(i),T9(i);
         e9(i) = exergie(h9(i),s9(i));    
     end
+    
+    
+    %%%%%%%%% Calcul etat 100 %%%%%%%%%%
+    %état avant la vanne et après le subcooler
+    T_100 = T_80 + TPinchSub;
+    p_100 = p7(1) ;
+    h_100 = XSteam('h_pT',p_100,T_100);
+    s_100 = XSteam('s_pT',p_100,T_100);
+    x_100 = XSteam('x_ph',p_100,T_100);
+    e_100 = exergie(h_100,s_100);
+    
+    %%%%%%%%% Calcul etat  110 %%%%%%%%%%
+    %état après la vanne (isenthalpique), juste avant le condenseur
+    h_110 = h_100;
+    T_110 = T_70;
+    p_110 = p_70;
+    s_110 = XSteam('s_pT',p_110,T_110);
+    x_110 = XSteam('x_ph',p_110,T_110);
+    e_100 = exergie(h_110,s_110);
     
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
     x_10 = 0; % entierement liquide
