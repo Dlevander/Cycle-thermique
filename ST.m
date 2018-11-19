@@ -401,6 +401,7 @@ elseif nsout>0
     
     
     %% Degasification
+<<<<<<< HEAD
     if drumFlag == 1
         %%%%%%%%% Calcul etat 7x %%%%%%%%%%
         p7 = p6; % on considere les vannes de detente apres les etats 7
@@ -415,6 +416,24 @@ elseif nsout>0
                 p_degaz = p7(i); %temperature avant la pompe pb
                 flag = 1;
             end
+=======
+    
+    
+    
+    %%%%%%%%% Calcul etat 7x %%%%%%%%%%
+    p7 = p6; % on considere les vannes de detente apres les etats 7
+    
+    % les temperature de condensation sont les temp de sortie des echangeur
+    flag = 0; 
+    for i=1:length(p7) 
+        T7(i) = XSteam('Tsat_p',p7(i));
+        if T7(i) >= 393.15 && flag==0 %flag pour s'assurer que ce ne soit pas létat avec la temp max qui soit retenu mais bien celui juste au dessus de 120°C
+            % calcul de la pression dans le degazificateur
+            T_degaz = T7(i);
+            p_degaz = p7(i); %temperature avant la pompe pb 
+            flag = 1;
+            d = i ;
+>>>>>>> 6de9a0ba55ef979b3832474e32773b4c3aa394dc
         end
     end
     %%%%%%%%%%%%%%% Calcul X %%%%%%%%%%%%%%%
@@ -436,16 +455,39 @@ elseif nsout>0
     
     %%%%%%%%% Calcul des etat 9x %%%%%%%%
     p9 = zeros(1,length(h9));
-    for i = 1:length(p9)
-        if T7(i)<=393.15
+    for i = 2:length(p9)
+        if i<d
             p9(i) = p_degaz;
+<<<<<<< HEAD
         else p9(i) = 100; %hypothese tiree du livre
+=======
+        else p9(i) = p_10;
+>>>>>>> 6de9a0ba55ef979b3832474e32773b4c3aa394dc
         end
         T9(i) = T7(i)-TPinchEx %si on considere des echangeurs parfaits
         h9(i) = XSteam('h_pT',p9(i),T9(i));
         s9(i) = XSteam('s_pT',p9(i),T9(i);
         e9(i) = exergie(h9(i),s9(i));
     end
+    
+    
+    %%%%%%%%% Calcul etat 100 %%%%%%%%%%
+    %état avant la vanne et après le subcooler
+    T_100 = T_80 + TPinchSub;
+    p_100 = p7(1) ;
+    h_100 = XSteam('h_pT',p_100,T_100);
+    s_100 = XSteam('s_pT',p_100,T_100);
+    x_100 = XSteam('x_ph',p_100,T_100);
+    e_100 = exergie(h_100,s_100);
+    
+    %%%%%%%%% Calcul etat  110 %%%%%%%%%%
+    %état après la vanne (isenthalpique), juste avant le condenseur
+    h_110 = h_100;
+    T_110 = T_70;
+    p_110 = p_70;
+    s_110 = XSteam('s_pT',p_110,T_110);
+    x_110 = XSteam('x_ph',p_110,T_110);
+    e_100 = exergie(h_110,s_110);
     
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
     x_10 = 0; % entierement liquide
