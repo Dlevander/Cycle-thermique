@@ -519,8 +519,27 @@ elseif nsout>0
 %   -eta(7) : eta_combex, Combustion exergy efficiency
 %   -eta(8) : eta_chemex, Chimney exergy efficiency (losses)
 %   -eta(9) : eta_transex, Heat exchanger overall exergy efficiency
-    
-    
+
+%  ex_mT    exergie du travail moteur de la turbine [kJ/kg]
+%  W_mT     Travail moteur de la turbine
+%  Q_I      Action calorifique à la chaudière [kJ/kg]
+%  ex_I     delta d' Exergie à la chaudière [kJ/kg]
+ex_mT = 0;
+if reheat = 0
+    W_mT = h_30-h_60; 
+    Q_I = (X_tot+1)*(h_30 - h_20);
+    ex_I = (X_tot+1)*(e_30 - e_20);
+    if nsout > 0
+        for i = 1:nsout
+            W_mT = W_mT + X(i)*(h_30 - h6(i));
+            ex_mT = ex_mT + X(i)*(e_30 - e6(i));
+        end
+    end
+        
+    ex_mT = ex_mT + e_30 - e_60;
+    elseif reheat == 1
+        
+        
     
 end
 
