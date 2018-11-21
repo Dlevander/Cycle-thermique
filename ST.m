@@ -455,22 +455,22 @@ elseif nsout>0
     
     %%%%%%%%% Calcul des etat 9x %%%%%%%%
     p9 = zeros(1,length(h9));
-    for i = 2:length(p9)
+    for i = 1:length(p9)
         if i<d
-            p9(i) = p_degaz;
-<<<<<<< HEAD
-        else p9(i) = 100; %hypothese tiree du livre
-=======
-        else p9(i) = p_10;
->>>>>>> 6de9a0ba55ef979b3832474e32773b4c3aa394dc
+            p9(i) = p_degaz;      
+        else 
+            p9(i) = p_10;
         end
-        T9(i) = T7(i)-TPinchEx %si on considere des echangeurs parfaits
-        h9(i) = XSteam('h_pT',p9(i),T9(i));
+        if i==1
+            h9(1) = 
+            T9(1) = XSteam('T_ph',p9(1),h9(1);
+        else
+            T9(i) = T7(i)-TPinchEx %si on considere des echangeurs parfaits
+            h9(i) = XSteam('h_pT',p9(i),T9(i));
+        end
         s9(i) = XSteam('s_pT',p9(i),T9(i);
         e9(i) = exergie(h9(i),s9(i));
     end
-    
-    
     %%%%%%%%% Calcul etat 100 %%%%%%%%%%
     %état avant la vanne et après le subcooler
     T_100 = T_80 + TPinchSub;
@@ -506,4 +506,21 @@ elseif nsout>0
     x_20=XSteam('x_ph',p_20,h_20);
     e_20=exergie(h_20,s_20);
     
+    
+    
+    %%%%%%%%% Calcul des rendements %%%%%%%%%%
+    % ETA is a vector with :
+%   -eta(1) : eta_cyclen, cycle energy efficiency
+%   -eta(2) : eta_toten, overall energy efficiency
+%   -eta(3) : eta_cyclex, cycle exegy efficiency
+%   -eta(4) : eta_totex, overall exergie efficiency
+%   -eta(5) : eta_gen, Steam generator energy efficiency
+%   -eta(6) : eta_gex, Steam generator exergy efficiency
+%   -eta(7) : eta_combex, Combustion exergy efficiency
+%   -eta(8) : eta_chemex, Chimney exergy efficiency (losses)
+%   -eta(9) : eta_transex, Heat exchanger overall exergy efficiency
+    
+    
+    
 end
+
