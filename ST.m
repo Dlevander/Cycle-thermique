@@ -499,42 +499,59 @@ elseif nsout>0
         
         A = zeros(nsout,nsout);
         B = zeros(nsout,1);
-        %remplissage de la matrice A 
-        for i=1:nsout % i les lignes de la matrice  
+        %remplissage de la matrice A
+        for i=1:nsout % i les lignes de la matrice
             for j=1:nsout % colonnes de la matrice
-                if i == 1 
-                    if j < d 
+                if i == 1
+                    if j < d
                         A(i,j) = A(i,j)+ h9(2) - h8 -h100 + h7(1);
-                        if j ~= i 
-                
-                if j <= d
-                    if i == 1
-                        A(i,j) = A(i,j)+ h9(2) - h8;
-                    elseif i < d
-                        A(i,j) = A(i,j)+ h9(i)-h9(i-1);
-                    elseif i == d
-                        A(i,j) = A(i,j)+ h7(d) - h9(d-1);
+                        if j ~= i
+                            
+                            if j <= d
+                                if i == 1
+                                    A(i,j) = A(i,j)+ h9(2) - h8;
+                                elseif i < d
+                                    A(i,j) = A(i,j)+ h9(i)-h9(i-1);
+                                elseif i == d
+                                    A(i,j) = A(i,j)+ h7(d) - h9(d-1);
+                                end
+                            elseif j == d
+                            else
+                            end
+                        end
                     end
-                elseif j == d
-                else
-                end
                 end
             end
+            %%%%%%%%% Calcul des rendements %%%%%%%%%%
+            % ETA is a vector with :
+            %   -eta(1) : eta_cyclen, cycle energy efficiency
+            %   -eta(2) : eta_toten, overall energy efficiency
+            %   -eta(3) : eta_cyclex, cycle exegy efficiency
+            %   -eta(4) : eta_totex, overall exergie efficiency
+            %   -eta(5) : eta_gen, Steam generator energy efficiency
+            %   -eta(6) : eta_gex, Steam generator exergy efficiency
+            %   -eta(7) : eta_combex, Combustion exergy efficiency
+            %   -eta(8) : eta_chemex, Chimney exergy efficiency (losses)
+            %   -eta(9) : eta_transex, Heat exchanger overall exergy efficiency
+            
+            %  ex_mT    exergie du travail moteur de la turbine [kJ/kg]
+            %  W_mT     Travail moteur de la turbine
+            %  Q_I      Action calorifique à la chaudière [kJ/kg]
+            %  ex_I     delta d' Exergie à la chaudière [kJ/kg]
+            ex_mT = 0;
+            if reheat = 0
+                W_mT = h_30-h_60;
+                Q_I = (X_tot+1)*(h_30 - h_20);
+                ex_I = (X_tot+1)*(e_30 - e_20);
+                if nsout > 0
+                    for i = 1:nsout
+                        W_mT = W_mT + X(i)*(h_30 - h6(i));
+                        ex_mT = ex_mT + X(i)*(e_30 - e6(i));
+                    end
+                end
+                ex_mT = ex_mT + e_30 - e_60;
+            elseif reheat == 1
+            end
+            
         end
-    end
-    %%%%%%%%% Calcul des rendements %%%%%%%%%%
-    % ETA is a vector with :
-    %   -eta(1) : eta_cyclen, cycle energy efficiency
-    %   -eta(2) : eta_toten, overall energy efficiency
-    %   -eta(3) : eta_cyclex, cycle exegy efficiency
-    %   -eta(4) : eta_totex, overall exergie efficiency
-    %   -eta(5) : eta_gen, Steam generator energy efficiency
-    %   -eta(6) : eta_gex, Steam generator exergy efficiency
-    %   -eta(7) : eta_combex, Combustion exergy efficiency
-    %   -eta(8) : eta_chemex, Chimney exergy efficiency (losses)
-    %   -eta(9) : eta_transex, Heat exchanger overall exergy efficiency
-    
-    
-    
-end
-
+        
