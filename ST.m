@@ -423,6 +423,7 @@ elseif nsout>0
                 flag = 1;
                 d = i ;
             end
+            h7(i) = XSteam('h_pT,p7(i),T7(i));
         end
         %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
         %Apres la pompe Pe, de rendement isentropique option.eta_SiC
@@ -551,7 +552,41 @@ elseif nsout>0
                 end
                 ex_mT = ex_mT + e_30 - e_60;
             elseif reheat == 1
+            
+                W_mT = (X_tot+1)*(h_30 - h_40) + (h_50 - h_60);
+                Q_I = (X_tot+1)*(h_30 - h_20) + (sum(X(1:nsout-1))+1)*(h_50 - h_40);% par kg 
+                ex_I =(X_tot+1)*(e_30 - e_20) + (sum(X(1:nsout-1))+1)*(e_50-e_40);
+     
+                if nsout > 1
+                    for i = 1:(nsout-1)
+                        W_mT = W_mT + X(i)*(h_50 - h6(i));
+                        ex_mT = ex_mT + (X(i)*(e_50 - e6(i)));
+                    end
+                end
+    
+                ex_mT = ex_mT  +(X_tot+1)*(e_30-e_40) + e_50-e_60;
             end
+            
+            % W_mP     travail fourni par les pompes
+            %  ex_mP    exergie des pompes
+            if  nsout ~= 0 
+                if drumFlag ==0 % travail fourni aux 2 pompes sans bache et avec soutirages
+                    W_mP = (X_tot+1)*(h_80-h_70+h_20-h_10);
+                    ex_mP = (X_tot+1)*(e_80-e_70+e_20-e_10);%W_mP - T_riv*(data(80).s - data(70).s + data(20).s - data(10).s);
+                else % travail fourni aux 3 pompes avec bache et avec soutirages
+                    W_mP = (X_tot+1)*(h_80-h_70 + h9(d) - h7(d) + h_20-h_10);
+                    ex_mP = W_mP - T_0*(s_80-s_70 + s9(d) - s7(d) + s_20-s_10);
+                end
+   
+            else % travail fourni à la pompe sans bache et sans soutirages
+                W_mP = (X_tot+1)*(h_20-h_10);
+                ex_mP = W_mP - T_0*(s_20-s_10);
+            end
+            
+            % m_vap    debit massique de vapeur
+            m_vap = P_eff/(eta_mec*(W_mT-W_mP)); %page 60
+            
+            
             
         end
         
