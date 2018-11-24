@@ -584,9 +584,79 @@ elseif nsout>0
             end
             
             % m_vap    debit massique de vapeur
-            m_vap = P_eff/(eta_mec*(W_mT-W_mP)); %page 60
+            %m_c debit masique combustible
+            m_vap = P_E/(eta_mec*(W_mT-W_mP)); %page 60
+            m_c = m_vap*Q_I/(rend_boiler*PCI); %p57
+            massflow(3) = m_c;
+
             
+            %%%%%%%% Combustion (détermination des fractions massiques des fumées %%%%%%
             
+            Mm_O2 = 32*1e-3; %kg/mol
+            Mm_CO2 = 44*1e-3;
+            Mm_H2 = 2.016*1e-3;
+            Mm_H2O = 18*1e-3;
+            Mm_N2 = 28*1e-3;
+            Mm_CO = 28*1e-3;
+            % Determination du combustible
+            lambda = options.comb.lambda;
+
+        if options.comb.x == 0 && options.comb.y == 4 % CH4 + 2*lambda*(O2+3.76N2) => 2*(lambda-1)*O2 + CO2 + 2*H2O + 2*lambda*3.76*N2
+            LHV = 5.020625*10^4 ; % kJ/kg
+            PCI_comb = 8.033*10^5; %J/mole
+            e_c = 52215; %kJ/kg fuel exergy. tableau pg 25 du livre
+            Cp_comb = 35.8; %J/(mole*K) 
+              % Fractions massiques des reactifs
+            Comb_R = 1;
+            O2_R = 2*lambda*32/MmComb;
+            N2_R = 2*lambda*3.76*28/MmComb;
+            % Fractions massiques des produits
+            x_O2 = 2*(lambda-1)*32/MmComb;
+            x_CO2 = 44/MmComb;
+            x_H2O = 2*18/MmComb;
+            x_N2 = 2*lambda*3.76*28/MmComb;
+
+        elseif options.comb.x == 0 && options.comb.y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
+            LHV = 32780; % [kJ/kg]
+            MmComb = 12; %[kg/kmol]
+            Cp_comb = 10.4/MmComb; %[kJ/kg_comb*K]
+            e_c = 32400; %[kJ/kg]
+             % Fractions massiques des reactifs [kg/kg_comb]
+            Comb_R = 1;
+            O2_R = lambda*32/MmComb;
+            N2_R = lambda*3.76*28/MmComb;
+            % Fractions massiques des produits [kg/kg_comb]
+            x_O2 = (lambda-1)*32/MmComb;
+            x_CO2 = 44/MmComb;
+            x_H2O = 0;
+            x_N2 = lambda*3.76*28/MmComb;
             
+        elseif options.comb.x == 0 && options.comb.y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1)*O2 + 3*CO2 + 4*H2O + 5*lambda*3.76*N2
+     
+            LHV = 46465; % [kJ/kg]
+            MmComb = 44; %[kg/kmol]
+            CpComb = 70.9/MmComb; %[kJ/kg_comb*K]
+            e_c = 49045; %[kJ/kg] 
+
+            % Fractions massiques des reactifs
+            Comb_R = 1;
+            O2_R = 5*lambda*32/MmComb;
+            N2_R = 5*lambda*3.76*28/MmComb;
+
+            % Fractions massiques des produits
+            x_O2 = 5*(lambda-1)*32/MmComb;
+            x_CO2 = 3*44/MmComb;
+            x_H2O = 4*18/MmComb;
+            x_N2 = 5*lambda*3.76*28/MmComb;
+
         end
+        ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb]
+        combustion.LHV = LHV;
+        combustion.e_c = e_c;
+        combustion.lambda = lambda;
+
+
+
+
+end
         
