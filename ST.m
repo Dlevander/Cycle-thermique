@@ -493,15 +493,19 @@ elseif nsout>0
         A = zeros(nsout,nsout);
         B = zeros(nsout,1);
         %remplissage de la matrice A
+        %premiere ligne particuliere
         A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h80 - h100 + h7(1) );
         A(1,1) = A(1,1) - ( h7(1) -h6(1) );
         A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) ); 
+        
         for i=2:nsout % i les lignes de la matrice
             deltaH9  = h9(i) - h9(i-1);
             deltaH7  = h7(i) - h7(i+1); 
             deltaH76 = h7(i) - h6(i);
             if i < d
                  A(i,1:d-1) = A(i,1:d-1) + deltaH9;
+                 A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
+                 A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
             end
             if i == d
                 A(i,1:d-1) = A(i,1:d-1) + h7(d) - h9(d-1);
@@ -510,14 +514,15 @@ elseif nsout>0
             end
             if i > d
                 A(i,:) = A(i,:) + deltaH9;
-                
-            end
-            for j=1:nsout % colonnes de la matrice
+                A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
+                if i < nsout
+                    A(i,i+1:nsout) = A(i,i+1:nsout) - deltaH7;
+                end
             end
         end
-
+        X = A\B;
         %%%%%%%%% Calcul etat 90 %%%%%%%%%%
-        
+        h_90 = h_80 + (h_100 - h7(1)) * sum( X(1:d-1) )/( 1+ sum( X(1:d-1) ));
         %%%%%%%%% Calcul des rendements %%%%%%%%%%
         % ETA is a vector with :
         %   -eta(1) : eta_cyclen, cycle energy efficiency
