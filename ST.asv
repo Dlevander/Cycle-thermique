@@ -1,4 +1,4 @@
-function [ETA XMASSFLOW DATEN DATEX DAT MASSFLOW COMBUSTION FIG] = ST(P_e,options,display)
+function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,options,display)
 % ST Steam power plants modelisation
 % ST(P_e,options,display) compute the thermodynamics states for a Steam
 % power plant (combustion, exchanger, cycle) turbine based on several
@@ -64,7 +64,7 @@ function [ETA XMASSFLOW DATEN DATEX DAT MASSFLOW COMBUSTION FIG] = ST(P_e,option
 %   -datex(6) : perte_chemex [kW]
 %   -datex(7) : perte_transex[kW]
 % DAT is a matrix containing :
-% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [Â°C]
+% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [�C]
 %        p_1       , p_2       , ...       , p_6_I,     p_6_II, ... ;  [bar]
 %        h_1       , h_2       , ...       , h_6_I,     h_6_II, ... ;  [kJ/kg]
 %        s_1       , s_2       , ...       , s_6_I,     s_6_II, ... ;  [kJ/kg/K]
@@ -416,14 +416,14 @@ elseif nsout>0
         flag = 0;
         for i=1:length(p7)
             T7(i) = XSteam('Tsat_p',p7(i));
-            if T7(i) >= 393.15 && flag==0 %flag pour s'assurer que ce ne soit pas létat avec la temp max qui soit retenu mais bien celui juste au dessus de 120°C
+            if T7(i) >= 393.15 && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120°C
                 % calcul de la pression dans le degazificateur
                 T_degaz = T7(i);
                 p_degaz = p7(i); %temperature avant la pompe pb
                 flag = 1;
                 d = i ;
             end
-            h7(i) = XSteam('h_pT,p7(i),T7(i));
+            h7(i) = XSteam('h_pT,p7(i),T7(i)');
         end
         %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
         %Apres la pompe Pe, de rendement isentropique option.eta_SiC
@@ -492,37 +492,48 @@ elseif nsout>0
         
         A = zeros(nsout,nsout);
         B = zeros(nsout,1);
-        %remplissage de la matrice A
+        %remplissage de la matrice A et B
         %premiere ligne particuliere
         A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h80 - h100 + h7(1) );
         A(1,1) = A(1,1) - ( h7(1) -h6(1) );
-        A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) ); 
+        A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
+        
+        B(1) = h9(1)-h80-h100+h7(1);
         
         for i=2:nsout % i les lignes de la matrice
             deltaH9  = h9(i) - h9(i-1);
-            deltaH7  = h7(i) - h7(i+1); 
+            deltaH7  = h7(i) - h7(i+1);
             deltaH76 = h7(i) - h6(i);
             if i < d
-                 A(i,1:d-1) = A(i,1:d-1) + deltaH9;
-                 A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
-                 A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
+                A(i,1:d-1) = A(i,1:d-1) + deltaH9;
+                A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
+                A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
+                
+                B(i) = deltaH9;
             end
             if i == d
-                A(i,1:d-1) = A(i,1:d-1) + h7(d) - h9(d-1);
-                A(i,d) = deltaH76;
-                A(i,d+1:nsout) = A(i,d+1:nsout) + deltaH7;
+                
             end
             if i > d
                 A(i,:) = A(i,:) + deltaH9;
                 A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
-                A(i,i+1:nsout) = A(i,i+1:d-1) - deltaH7;
-            end
-            for j=1:nsout % colonnes de la matrice
+                if i < nsout
+                    A(i,i+1:nsout) = A(i,i+1:nsout) - deltaH7;
+                end
             end
         end
-
-        %%%%%%%%% Calcul etat 90 %%%%%%%%%%
+        % remplissage ligne d particuliere
+        A(d,1:d-1) = A(d,1:d-1) + h7(d) - h9(d-1);
+        A(d,d) = h7(d) - h6(d);
+        A(d,d+1:nsout) = A(d,d+1:nsout) + h7(d) - h7(d+1);
         
+        B(d) = h7(d) - h9(d-1);
+        % Resolution
+        XMASSFLOW = A\B;
+        
+        %%%%%%%%% Calcul etat 90 %%%%%%%%%%
+        h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) ));
+        %%
         %%%%%%%%% Calcul des rendements %%%%%%%%%%
         % ETA is a vector with :
         %   -eta(1) : eta_cyclen, cycle energy efficiency
@@ -540,29 +551,29 @@ elseif nsout>0
         %  Q_I      Action calorifique à la chaudière [kJ/kg]
         %  ex_I     delta d' Exergie à la chaudière [kJ/kg]
         ex_mT = 0;
-        if reheat = 0
+        if reheat == 0
             W_mT = h_30-h_60;
             Q_I = (X_tot+1)*(h_30 - h_20);
             ex_I = (X_tot+1)*(e_30 - e_20);
             if nsout > 0
                 for i = 1:nsout
-                    W_mT = W_mT + X(i)*(h_30 - h6(i));
-                    ex_mT = ex_mT + X(i)*(e_30 - e6(i));
+                    W_mT = W_mT + XMASSFLOW(i)*(h_30 - h6(i));
+                    ex_mT = ex_mT + XMASSFLOW(i)*(e_30 - e6(i));
                 end
                 ex_mT = ex_mT + e_30 - e_60;
             elseif reheat == 1
-            
+                
                 W_mT = (X_tot+1)*(h_30 - h_40) + (h_50 - h_60);
-                Q_I = (X_tot+1)*(h_30 - h_20) + (sum(X(1:nsout-1))+1)*(h_50 - h_40);% par kg 
-                ex_I =(X_tot+1)*(e_30 - e_20) + (sum(X(1:nsout-1))+1)*(e_50-e_40);
-     
+                Q_I = (X_tot+1)*(h_30 - h_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(h_50 - h_40);% par kg
+                ex_I =(X_tot+1)*(e_30 - e_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(e_50-e_40);
+                
                 if nsout > 1
                     for i = 1:(nsout-1)
-                        W_mT = W_mT + X(i)*(h_50 - h6(i));
-                        ex_mT = ex_mT + (X(i)*(e_50 - e6(i)));
+                        W_mT = W_mT + XMASSFLOW(i)*(h_50 - h6(i));
+                        ex_mT = ex_mT + (XMASSFLOW(i)*(e_50 - e6(i)));
                     end
                 end
-    
+                
                 ex_mT = ex_mT  +(X_tot+1)*(e_30-e_40) + e_50-e_60;
             end
             ex_mT = ex_mT + e_30 - e_60;
@@ -570,7 +581,7 @@ elseif nsout>0
             
             % W_mP     travail fourni par les pompes
             %  ex_mP    exergie des pompes
-            if  nsout ~= 0 
+            if  nsout ~= 0
                 if drumFlag ==0 % travail fourni aux 2 pompes sans bache et avec soutirages
                     W_mP = (X_tot+1)*(h_80-h_70+h_20-h_10);
                     ex_mP = (X_tot+1)*(e_80-e_70+e_20-e_10);%W_mP - T_riv*(data(80).s - data(70).s + data(20).s - data(10).s);
@@ -578,7 +589,7 @@ elseif nsout>0
                     W_mP = (X_tot+1)*(h_80-h_70 + h9(d) - h7(d) + h_20-h_10);
                     ex_mP = W_mP - T_0*(s_80-s_70 + s9(d) - s7(d) + s_20-s_10);
                 end
-   
+                
             else % travail fourni à la pompe sans bache et sans soutirages
                 W_mP = (X_tot+1)*(h_20-h_10);
                 ex_mP = W_mP - T_0*(s_20-s_10);
@@ -589,7 +600,7 @@ elseif nsout>0
             m_vap = P_E/(eta_mec*(W_mT-W_mP)); %page 60
             m_c = m_vap*Q_I/(rend_boiler*PCI); %p57
             massflow(3) = m_c;
-
+            
             
             %%%%%%%% Combustion (détermination des fractions massiques des fumées %%%%%%
             
@@ -601,64 +612,64 @@ elseif nsout>0
             Mm_CO = 28*1e-3;
             % Determination du combustible
             lambda = options.comb.lambda;
-
-        if options.comb.x == 0 && options.comb.y == 4 % CH4 + 2*lambda*(O2+3.76N2) => 2*(lambda-1)*O2 + CO2 + 2*H2O + 2*lambda*3.76*N2
-            LHV = 5.020625*10^4 ; % kJ/kg
-            PCI_comb = 8.033*10^5; %J/mole
-            e_c = 52215; %kJ/kg fuel exergy. tableau pg 25 du livre
-            Cp_comb = 35.8; %J/(mole*K) 
-              % Fractions massiques des reactifs
-            Comb_R = 1;
-            O2_R = 2*lambda*32/MmComb;
-            N2_R = 2*lambda*3.76*28/MmComb;
-            % Fractions massiques des produits
-            x_O2 = 2*(lambda-1)*32/MmComb;
-            x_CO2 = 44/MmComb;
-            x_H2O = 2*18/MmComb;
-            x_N2 = 2*lambda*3.76*28/MmComb;
-
-        elseif options.comb.x == 0 && options.comb.y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
-            LHV = 32780; % [kJ/kg]
-            MmComb = 12; %[kg/kmol]
-            Cp_comb = 10.4/MmComb; %[kJ/kg_comb*K]
-            e_c = 32400; %[kJ/kg]
-             % Fractions massiques des reactifs [kg/kg_comb]
-            Comb_R = 1;
-            O2_R = lambda*32/MmComb;
-            N2_R = lambda*3.76*28/MmComb;
-            % Fractions massiques des produits [kg/kg_comb]
-            x_O2 = (lambda-1)*32/MmComb;
-            x_CO2 = 44/MmComb;
-            x_H2O = 0;
-            x_N2 = lambda*3.76*28/MmComb;
             
-        elseif options.comb.x == 0 && options.comb.y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1)*O2 + 3*CO2 + 4*H2O + 5*lambda*3.76*N2
-     
-            LHV = 46465; % [kJ/kg]
-            MmComb = 44; %[kg/kmol]
-            CpComb = 70.9/MmComb; %[kJ/kg_comb*K]
-            e_c = 49045; %[kJ/kg] 
-
-            % Fractions massiques des reactifs
-            Comb_R = 1;
-            O2_R = 5*lambda*32/MmComb;
-            N2_R = 5*lambda*3.76*28/MmComb;
-
-            % Fractions massiques des produits
-            x_O2 = 5*(lambda-1)*32/MmComb;
-            x_CO2 = 3*44/MmComb;
-            x_H2O = 4*18/MmComb;
-            x_N2 = 5*lambda*3.76*28/MmComb;
-
-        end
-        ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb]
-        combustion.LHV = LHV;
-        combustion.e_c = e_c;
-        combustion.lambda = lambda;
-
-
-
-
+            if options.comb.x == 0 && options.comb.y == 4 % CH4 + 2*lambda*(O2+3.76N2) => 2*(lambda-1)*O2 + CO2 + 2*H2O + 2*lambda*3.76*N2
+                LHV = 5.020625*10^4 ; % kJ/kg
+                PCI_comb = 8.033*10^5; %J/mole
+                e_c = 52215; %kJ/kg fuel exergy. tableau pg 25 du livre
+                Cp_comb = 35.8; %J/(mole*K)
+                % Fractions massiques des reactifs
+                Comb_R = 1;
+                O2_R = 2*lambda*32/MmComb;
+                N2_R = 2*lambda*3.76*28/MmComb;
+                % Fractions massiques des produits
+                x_O2 = 2*(lambda-1)*32/MmComb;
+                x_CO2 = 44/MmComb;
+                x_H2O = 2*18/MmComb;
+                x_N2 = 2*lambda*3.76*28/MmComb;
+                
+            elseif options.comb.x == 0 && options.comb.y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
+                LHV = 32780; % [kJ/kg]
+                MmComb = 12; %[kg/kmol]
+                Cp_comb = 10.4/MmComb; %[kJ/kg_comb*K]
+                e_c = 32400; %[kJ/kg]
+                % Fractions massiques des reactifs [kg/kg_comb]
+                Comb_R = 1;
+                O2_R = lambda*32/MmComb;
+                N2_R = lambda*3.76*28/MmComb;
+                % Fractions massiques des produits [kg/kg_comb]
+                x_O2 = (lambda-1)*32/MmComb;
+                x_CO2 = 44/MmComb;
+                x_H2O = 0;
+                x_N2 = lambda*3.76*28/MmComb;
+                
+            elseif options.comb.x == 0 && options.comb.y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1)*O2 + 3*CO2 + 4*H2O + 5*lambda*3.76*N2
+                
+                LHV = 46465; % [kJ/kg]
+                MmComb = 44; %[kg/kmol]
+                CpComb = 70.9/MmComb; %[kJ/kg_comb*K]
+                e_c = 49045; %[kJ/kg]
+                
+                % Fractions massiques des reactifs
+                Comb_R = 1;
+                O2_R = 5*lambda*32/MmComb;
+                N2_R = 5*lambda*3.76*28/MmComb;
+                
+                % Fractions massiques des produits
+                x_O2 = 5*(lambda-1)*32/MmComb;
+                x_CO2 = 3*44/MmComb;
+                x_H2O = 4*18/MmComb;
+                x_N2 = 5*lambda*3.76*28/MmComb;
+                
+            end
+            ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb]
+            combustion.LHV = LHV;
+            combustion.e_c = e_c;
+            combustion.lambda = lambda;
+            
+            
+            
+            
         end
         
     end
