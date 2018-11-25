@@ -423,6 +423,7 @@ elseif nsout>0
                 flag = 1;
                 d = i ;
             end
+            h7(i) = XSteam('h_pT,p7(i),T7(i));
         end
         %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
         %Apres la pompe Pe, de rendement isentropique option.eta_SiC
@@ -543,12 +544,117 @@ elseif nsout>0
                     W_mT = W_mT + X(i)*(h_30 - h6(i));
                     ex_mT = ex_mT + X(i)*(e_30 - e6(i));
                 end
+                ex_mT = ex_mT + e_30 - e_60;
+            elseif reheat == 1
+            
+                W_mT = (X_tot+1)*(h_30 - h_40) + (h_50 - h_60);
+                Q_I = (X_tot+1)*(h_30 - h_20) + (sum(X(1:nsout-1))+1)*(h_50 - h_40);% par kg 
+                ex_I =(X_tot+1)*(e_30 - e_20) + (sum(X(1:nsout-1))+1)*(e_50-e_40);
+     
+                if nsout > 1
+                    for i = 1:(nsout-1)
+                        W_mT = W_mT + X(i)*(h_50 - h6(i));
+                        ex_mT = ex_mT + (X(i)*(e_50 - e6(i)));
+                    end
+                end
+    
+                ex_mT = ex_mT  +(X_tot+1)*(e_30-e_40) + e_50-e_60;
             end
             ex_mT = ex_mT + e_30 - e_60;
         elseif reheat == 1
             
+            % W_mP     travail fourni par les pompes
+            %  ex_mP    exergie des pompes
+            if  nsout ~= 0 
+                if drumFlag ==0 % travail fourni aux 2 pompes sans bache et avec soutirages
+                    W_mP = (X_tot+1)*(h_80-h_70+h_20-h_10);
+                    ex_mP = (X_tot+1)*(e_80-e_70+e_20-e_10);%W_mP - T_riv*(data(80).s - data(70).s + data(20).s - data(10).s);
+                else % travail fourni aux 3 pompes avec bache et avec soutirages
+                    W_mP = (X_tot+1)*(h_80-h_70 + h9(d) - h7(d) + h_20-h_10);
+                    ex_mP = W_mP - T_0*(s_80-s_70 + s9(d) - s7(d) + s_20-s_10);
+                end
+   
+            else % travail fourni à la pompe sans bache et sans soutirages
+                W_mP = (X_tot+1)*(h_20-h_10);
+                ex_mP = W_mP - T_0*(s_20-s_10);
+            end
+            
+            % m_vap    debit massique de vapeur
+            %m_c debit masique combustible
+            m_vap = P_E/(eta_mec*(W_mT-W_mP)); %page 60
+            m_c = m_vap*Q_I/(rend_boiler*PCI); %p57
+            massflow(3) = m_c;
+
+            
+            %%%%%%%% Combustion (détermination des fractions massiques des fumées %%%%%%
+            
+            Mm_O2 = 32*1e-3; %kg/mol
+            Mm_CO2 = 44*1e-3;
+            Mm_H2 = 2.016*1e-3;
+            Mm_H2O = 18*1e-3;
+            Mm_N2 = 28*1e-3;
+            Mm_CO = 28*1e-3;
+            % Determination du combustible
+            lambda = options.comb.lambda;
+
+        if options.comb.x == 0 && options.comb.y == 4 % CH4 + 2*lambda*(O2+3.76N2) => 2*(lambda-1)*O2 + CO2 + 2*H2O + 2*lambda*3.76*N2
+            LHV = 5.020625*10^4 ; % kJ/kg
+            PCI_comb = 8.033*10^5; %J/mole
+            e_c = 52215; %kJ/kg fuel exergy. tableau pg 25 du livre
+            Cp_comb = 35.8; %J/(mole*K) 
+              % Fractions massiques des reactifs
+            Comb_R = 1;
+            O2_R = 2*lambda*32/MmComb;
+            N2_R = 2*lambda*3.76*28/MmComb;
+            % Fractions massiques des produits
+            x_O2 = 2*(lambda-1)*32/MmComb;
+            x_CO2 = 44/MmComb;
+            x_H2O = 2*18/MmComb;
+            x_N2 = 2*lambda*3.76*28/MmComb;
+
+        elseif options.comb.x == 0 && options.comb.y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
+            LHV = 32780; % [kJ/kg]
+            MmComb = 12; %[kg/kmol]
+            Cp_comb = 10.4/MmComb; %[kJ/kg_comb*K]
+            e_c = 32400; %[kJ/kg]
+             % Fractions massiques des reactifs [kg/kg_comb]
+            Comb_R = 1;
+            O2_R = lambda*32/MmComb;
+            N2_R = lambda*3.76*28/MmComb;
+            % Fractions massiques des produits [kg/kg_comb]
+            x_O2 = (lambda-1)*32/MmComb;
+            x_CO2 = 44/MmComb;
+            x_H2O = 0;
+            x_N2 = lambda*3.76*28/MmComb;
+            
+        elseif options.comb.x == 0 && options.comb.y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1)*O2 + 3*CO2 + 4*H2O + 5*lambda*3.76*N2
+     
+            LHV = 46465; % [kJ/kg]
+            MmComb = 44; %[kg/kmol]
+            CpComb = 70.9/MmComb; %[kJ/kg_comb*K]
+            e_c = 49045; %[kJ/kg] 
+
+            % Fractions massiques des reactifs
+            Comb_R = 1;
+            O2_R = 5*lambda*32/MmComb;
+            N2_R = 5*lambda*3.76*28/MmComb;
+
+            % Fractions massiques des produits
+            x_O2 = 5*(lambda-1)*32/MmComb;
+            x_CO2 = 3*44/MmComb;
+            x_H2O = 4*18/MmComb;
+            x_N2 = 5*lambda*3.76*28/MmComb;
+
         end
-    else
+        ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb]
+        combustion.LHV = LHV;
+        combustion.e_c = e_c;
+        combustion.lambda = lambda;
+
+
+
+
+        end
         
     end
 end
