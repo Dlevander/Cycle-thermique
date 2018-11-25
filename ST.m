@@ -342,26 +342,22 @@ elseif reheat == 0
     T_60 = T_cond_out;
     p_60 = XSteam('psat_T',T_60);
     x_60s = XSsteam('x_ps',p_60,s_60s);
-    %x_40s = (s_40s - XSteam('sL_T',T_40s)) / (XSteam('sV_T',T_40s) - XSteam('sL_T',T_40s)) ;
     h_60s = XSteam('h_Tx',T_60s,x_60s);
-    %h_40s = (x_40s*XSteam('hV_T',T_40s)) + ((1-x_40s)*XSteam('hL_T',T_40s));
     h_60 = h_30 - eta_SiT_HP * eta_SiT_others * (h_30-h_60s) ;
     x_60 = XSteam('x_ph',p_60,h_60);
-    %x_40 = (h_40 - XSteam('hL_T',T_40s)) / (XSteam('hV_T',T_40s) - XSteam('hL_T',T_40s));
     s_60 = XSteam('s_ph',p_60,h_60);
-    %s_40 = (x_40*XSteam('sV_T',T_40)) + ((1-x_40)*XSteam('sL_T',T_40));
     e_60 = exergie(h_60,s_60);
     
 end
 
 %%%%%%%%%%%%%%% ETAT 70 %%%%%%%%%%%%%%%
 %Sortie du condenseur, liquide sature
-T_70 = T_60; %car passe simplement de vapeur a liquide saturÃ©
+T_70 = T_60; %car passe simplement de vapeur a liquide saturee
 h_70 = XSteam('hL_T',T_70);
 p_70 = XSteam('psat_T',T_70);
 s_70 = XSteam('sL_T',T_70);
 e_70 = exergie(h_70,s_70);
-%x_70=XSteam('x_ph',p_70,h_70); %=0
+x_70=XSteam('x_ph',p_70,h_70); %=0 car liquide saturee en sortie de condenseur
 
 if nsout==0
     %S'il n'y a pas de soutirage le point 1 = point 7 car on coupe avant Pe et on revient au point 1 avant Pa
@@ -370,12 +366,10 @@ if nsout==0
     p_10 = p_70;
     s_10 = s_70;
     e_10 = e_70;
-    x_10 = x_70; %=0
+    x_10 = x_70;
     
 elseif nsout>0
-    %S'il y a un ou plusieurs soutirages
-    
-    %%%%%%%%% Calcul enthalpie Soutirage etat 61s et 61 %%%%%%%%
+    %%%%%%%%% Calcul etat 61s et 61 %%%%%%%%
     % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
     
     h6s_temp = linspace(h_60s,h_50s,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
@@ -446,7 +440,7 @@ elseif nsout>0
             if i<d
                 p9(i) = p_degaz;
             else
-                p9(i) = p_10;
+                p9(i) = p_;
             end
             h9(i) = XSteam('h_pT',p9(i),T9(i));
             s9(i) = XSteam('s_pT',p9(i),T9(i));
@@ -463,7 +457,7 @@ elseif nsout>0
         e_100 = exergie(h_100,s_100);
         
         %%%%%%%%% Calcul etat  110 %%%%%%%%%%
-        %état après la vanne (isenthalpique), juste avant le condenseur
+        %etat après la vanne (isenthalpique), juste avant le condenseur
         h_110 = h_100;
         T_110 = T_70;
         p_110 = p_70;
@@ -489,7 +483,6 @@ elseif nsout>0
         e_20=exergie(h_20,s_20);
         
         %%%%%%%%% Calcul des Soutirages X %%%%%%%%%%
-        
         A = zeros(nsout,nsout);
         B = zeros(nsout,1);
         %remplissage de la matrice A et B
@@ -498,8 +491,7 @@ elseif nsout>0
         A(1,1) = A(1,1) - ( h7(1) -h6(1) );
         A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
         
-        B(1) = h9(1)-h80-h100+h7(1);
-        
+        B(1) = h9(1)-h80-h100+h7(1);   
         for i=2:nsout % i les lignes de la matrice
             deltaH9  = h9(i) - h9(i-1);
             deltaH7  = h7(i) - h7(i+1);
@@ -510,9 +502,6 @@ elseif nsout>0
                 A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
                 
                 B(i) = deltaH9;
-            end
-            if i == d
-                
             end
             if i > d
                 A(i,:) = A(i,:) + deltaH9;
@@ -666,11 +655,11 @@ elseif nsout>0
             combustion.LHV = LHV;
             combustion.e_c = e_c;
             combustion.lambda = lambda;
-            
-            
-            
-            
         end
+    end
+    
+    %% Display part
+    if display == 1
         
     end
 end
