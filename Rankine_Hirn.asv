@@ -27,24 +27,15 @@ P_e = 35e3;
 
 [~,~,~,~,DAT,~,~,~] = ST(P_e,optionsST,1)
 
-T = linspace(0.001,400,1000);
-S = zeros(1,2000);
-v = 0;
-i = 1;
-while v ==0
-    s = XSteam('sL_T',T(i));
-    if isnan(s)
-        v = i;
-        s = XSteam('sV_T',T(i));
-    end
-    S(i) = s;
-    i = i+1;
+T = linspace(0.001,400,400);
+SL = zeros(1,400);
+SV = zeros(1,400);
+
+for i=1:length(T)
+    SL(i) = XSteam('sL_T',T(i));
+    SV(i) = XSteam('sV_T',T(i));
 end
-for j=v:-1:1
-    s = XSteam('sV_T',T(j));
-    S(i) = s;
-    i = i+1;
-end
-T = [T linspace(400,0.001,1000)];
-S = S
+S = [SL SV];
+T = [T T];
 plot(S,T)
+grid on
