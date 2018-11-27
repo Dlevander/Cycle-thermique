@@ -25,7 +25,7 @@ optionsST.eta_SiC = 0.85;%   [-] : Isotrenpic efficiency for compression
 
 P_e = 35e3;
 
-[~,~,~,~,DAT,~,~,~] = ST(P_e,optionsST,1)
+[ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,optionsST,1)
 
 T = linspace(0.001,400,400);
 SL = zeros(1,400);
