@@ -559,7 +559,7 @@ elseif nsout>0
     XMASSFLOW = A\B;
     
     %%%%%%%%% Calcul etat 90 %%%%%%%%%%
-    h_90 = h_80 + (h_100 - h7(1)) * Sum( XMASSFLOW(1:d-1) )/( 1+ Sum( XMASSFLOW(1:d-1) ));
+    h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) ));
     
     
     %%%%%%%%% Calcul des rendements %%%%%%%%%%
@@ -592,8 +592,8 @@ elseif nsout>0
         elseif reheat == 1
             
             W_mT = (X_tot+1)*(h_30 - h_40) + (h_50 - h_60);
-            Q_I = (X_tot+1)*(h_30 - h_20) + (Sum(XMASSFLOW(1:nsout-1))+1)*(h_50 - h_40);% par kg
-            ex_I =(X_tot+1)*(e_30 - e_20) + (Sum(XMASSFLOW(1:nsout-1))+1)*(e_50-e_40);
+            Q_I = (X_tot+1)*(h_30 - h_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(h_50 - h_40);% par kg
+            ex_I =(X_tot+1)*(e_30 - e_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(e_50-e_40);
             
             if nsout > 1
                 for i = 1:(nsout-1)
@@ -605,7 +605,6 @@ elseif nsout>0
             ex_mT = ex_mT  +(X_tot+1)*(e_30-e_40) + e_50-e_60;
         end
         ex_mT = ex_mT + e_30 - e_60;
-    elseif reheat == 1
         
         % W_mP     travail fourni par les pompes
         %  ex_mP    exergie des pompes
