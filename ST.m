@@ -279,7 +279,7 @@ DATEX = zeros(7,1);
 
 %numEtat = 7+reheat+nsout;
 
-DAT= zeros(6,20);
+DAT= zeros(6,35);
 
 MASSFLOW = 0; %A MODIFIER
 COMBUSTION = 0; %A MODIFIER
@@ -376,7 +376,7 @@ end
 
 %%%%%%%%%%%%%%% ETAT 70 %%%%%%%%%%%%%%%
 %Sortie du condenseur, liquide sature
-T_70 = T_60-3; %car passe simplement de vapeur a liquide saturee -3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
+T_70 = T_60-1; %car passe simplement de vapeur a liquide saturee -3 pour RH1, -1 pour 1reheat8nsout
 h_70 = XSteam('hL_T',T_70);
 p_70 = XSteam('psat_T',T_70);
 s_70 = XSteam('sL_T',T_70);
@@ -564,14 +564,16 @@ DAT(:,4) = [T_22 p_22 h_22 s_22 e_22 x_22]';
 DAT(:,5) = [T_30 p_30 h_30 s_30 e_30 x_30]';
 if reheat == 0
     DAT(:,6) = [T_60 p_60 h_60 s_60 e_60 x_60]';
+    if nsout > 0
+        
+    end    
 elseif reheat == 1
     DAT(:,6) = [T_40 p_40 h_40 s_40 e_40 x_40]';
     DAT(:,7) = [T_50 p_50 h_50 s_50 e_50 x_50]';
     DAT(:,8) = [T_60 p_60 h_60 s_60 e_60 x_60]';
     if nsout > 0
         
-    end
-    
+    end  
 end
 %% Rendements
 X_tot = sum(XMASSFLOW);
@@ -630,7 +632,7 @@ X_tot = sum(XMASSFLOW);
                 ex_mP = W_mP - T_0*(s_80-s_70 + s9(d) - s7(d) + s_20-s_10);
             end
             
-        else % travail fourni aÂ  la pompe sans bache et sans soutirages
+        else % travail fourni a� la pompe sans bache et sans soutirages
             W_mP = (X_tot+1)*(h_20-h_10);
             ex_mP = W_mP - T_0*(s_20-s_10);
         end
@@ -657,7 +659,7 @@ X_tot = sum(XMASSFLOW);
             x_H2O = 2*18/MmComb;
             x_N2 = 2*lambda*3.76*28/MmComb;
             
-        elseif options.comb.x == 0 && options.comb.y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
+        elseif x == 0 && y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
             LHV = 32780; % [kJ/kg]
             MmComb = 12; %[kg/kmol]
             Cp_comb = 1000*10.4/MmComb; %[J/kg_comb*K]
@@ -672,7 +674,7 @@ X_tot = sum(XMASSFLOW);
             x_H2O = 0;
             x_N2 = lambda*3.76*28/MmComb;
             
-        elseif options.comb.x == 0 && options.comb.y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1)*O2 + 3*CO2 + 4*H2O + 5*lambda*3.76*N2
+        elseif x == 0 && y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1)*O2 + 3*CO2 + 4*H2O + 5*lambda*3.76*N2
             
             LHV = 46465; % [kJ/kg]
             MmComb = 44; %[kg/kmol]
@@ -690,11 +692,12 @@ X_tot = sum(XMASSFLOW);
             x_N2 = 5*lambda*3.76*28/MmComb;
             
         end
-        ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb]
+        ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb] % x toujours egal a 0
+        %ma1 = (1+(y-2*x)/4)*(32+3.76*28.15)/(12.01+1.008*y+16*x);
         combustion.LHV = LHV;
         combustion.e_c = e_c;
         combustion.lambda = lambda;
-        %%Debit massique combustible et fumÃ©es
+        %%Debit massique combustible et fumees
         T_exh = T_exhaust;%T en sortie de cheminee
         T_f = Tmax; %T fumÃ©es juste en sortie de combustion
         TK_exh = T_exh+273.15;
@@ -709,7 +712,7 @@ X_tot = sum(XMASSFLOW);
         m_comb = m_fum/(1+ma1*lambda); %debit combustible
         
         %%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
-        %on change les fractions massiques de (kg/kg_comb) Ã  (kg/kg_fum)
+        %on change les fractions massiques de (kg/kg_comb) (kg/kg_fum)
         Sum = x_O2 + x_CO2 + x_H2O + x_N2 ;
         x_O2 = x_O2/Sum;
         x_CO2 = x_CO2/Sum;
