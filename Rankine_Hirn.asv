@@ -40,12 +40,11 @@ while v ==0
     S(i) = s;
     i = i+1;
 end
-for j=v-1:-1:1
+for j=v:-1:1
     s = XSteam('sV_T',T(j));
     S(i) = s;
     i = i+1;
 end
-S = S(1:2*v);
-T = [linspace(0.001,T(v),v) linspace(T(v),0.001,v)];
+T = [T linspace(400,0.001,1000)];
+S = S
 plot(S,T)
-grid on
