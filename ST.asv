@@ -190,7 +190,7 @@ end
 if isfield(options,'T_exhaust')
     T_exhaust = options.T_exhaust;
 else
-    T_exhaust = 120.0;  % [ÃƒÆ’Ã‚Â©C]
+    T_exhaust = 120.0;  % [C]
 end
 
 if isfield(options,'p_3')
@@ -208,31 +208,31 @@ end
 if isfield(options,'T_0')
     T_0 = options.T_0;
 else
-    T_0 = 15.0;  % [ÃƒÆ’Ã‚Â©C]
+    T_0 = 15.0;  % [C]
 end
 
 if isfield(options,'TpinchSub')
     TpinchSub= options.TpinchSub;
 else
-    TpinchSub = 115.0;  % [ÃƒÆ’Ã‚Â©C]
+    TpinchSub = 115.0;  % [C]
 end
 
 if isfield(options,'TpinchEx')
     TpinchEx = options.TpinchEx;
 else
-    TpinchEx = 490.0;  % [ÃƒÆ’Ã‚Â©C]
+    TpinchEx = 490.0;  % [C]
 end
 
 if isfield(options,'TpinchCond')
     TpinchCond= options.TpinchCond;
 else
-    TpinchCond = 18.0;  % [ÃƒÆ’Ã‚Â©C]
+    TpinchCond = 18.0;  % [C]
 end
 
 if isfield(options,'Tdrum')
     Tdrum = options.Tdrum;
 else
-    Tdrum = 120.0;  % [°C]
+    Tdrum = 120.0;  % [�C]
 end
 
 if isfield(options,'eta_SiC')
@@ -242,9 +242,13 @@ else
 end
 
 if isfield(options,'eta_SiT')
-    eta_SiT_HP = options.eta_SiT(1);
-    eta_SiT_others = options.eta_SiT(2);
-    
+    if length(options.eta_SiT) == 2
+        eta_SiT_HP = options.eta_SiT(1);
+        eta_SiT_others = options.eta_SiT(2);        
+    elseif length(options.eta_SiT) == 1
+        eta_SiT_HP = options.eta_SiT; % A MODIFIER SUREMENT
+        eta_SiT_others = eta_SiT_HP;
+    end
 else
     eta_SiT_HP = sqrt(0.88);  % [-]
     eta_SiT_others = sqrt(0.88); % on considere rendement egale pour les turbines MP et BP
@@ -340,7 +344,7 @@ if reheat == 1
     T_60s = T_cond_out;
     T_60 = T_cond_out;
     p_60 = XSteam('psat_T',T_60);
-    x_60s = XSsteam('x_ps',p_60,s_60s);
+    x_60s = XSteam('x_ps',p_60,s_60s);
     h_60s = XSteam('h_Tx',T_60s,x_60s);
     
     h_60 = h_50 - eta_SiT_others * (h_50-h_60s) ;
@@ -406,6 +410,7 @@ if nsout==0
     DAT(:,3) = [T_21 p_21 h_21 s_21 e_21 x_21]';
     DAT(:,4) = [T_22 p_22 h_22 s_22 e_22 x_22]';
     DAT(:,5) = [T_30 p_30 h_30 s_30 e_30 x_30]';
+    if reheat == 0
     DAT(:,6) = [T_60 p_60 h_60 s_60 e_60 x_60]';
     
 elseif nsout>0
@@ -718,29 +723,29 @@ X_tot = sum(XMASSFLOW);
             rend_boiler = m_vap*(X_tot+1)*(h_30-h_20)/(m_comb*LHV*10^3);
         elseif reheat ==1
             if n_sout>0
-                rend_boiler = (m_vap*((X_tot+1)*(h_30-h_20)+ (X_tot-X(nsout)+1)*(h_50-h_40)))/(m_c*LHV*10^3);
+                rend_boiler = (m_vap*((X_tot+1)*(h_30-h_20)+ (X_tot-X(nsout)+1)*(h_50-h_40)))/(m_comb*LHV*10^3);
             else
-                rend_boiler = (m_vap*((X_tot+1)*(h_30-h_20)+ (X_tot+1)*(h_50-h_40)))/(m_c*LHV*10^3);
+                rend_boiler = (m_vap*((X_tot+1)*(h_30-h_20)+ (X_tot+1)*(h_50-h_40)))/(m_comb*LHV*10^3);
             end
         end
         %%Rendement Ã©nergÃ©tique du cycle
         rend_cyclen = (W_mT - W_mP)/Q_I;
-        rend_toten = rend_boiler*rend_meca*rend_cyclen;
+        rend_toten = rend_boiler*eta_SiT_HP*rend_cyclen;
         %% pertes et puissances
         % Pu_tot 	Puissance Totale
         % Per_boiler 	pertes Ã  la chaudiÃ¨re
         % Pu_turb    Puissance Ã  la turbine
         % Pe_meca 	pertes mecanique
         % Pe_cond    pertes au condenseur
-        Pu_tot = m_c*LHV*10^3;
+        Pu_tot = m_comb*LHV*10^3;
         Per_boiler = Pu_tot*(1-rend_boiler);
-        Pu_turb = P_E/option.eta_SiT(1);
-        Per_meca = P_turb*(1-option.eta_SiT(1)) + W_mP;
-        Per_cond =  P_tot - P_E - Per_boiler - Per_meca;
+        Pu_turb = P_e/eta_SiT_HP;
+        Per_meca = Pu_turb*(1-eta_SiT_HP) + W_mP;
+        Per_cond =  Pu_tot - P_e - Per_boiler - Per_meca;
         
         %% Rendement exergÃ©tique du cycle
         % P_totex    Flux exergetique total
-        P_totex = m_c*e_c*10^3;
+        P_totex = m_comb*e_c*10^3;
         % rend_totex    rendement exergetique total
         % rend_I_ex     rendement exergetique du generateur
         % rend_comb_ex  rendement exergetique de la combustion
@@ -748,11 +753,11 @@ X_tot = sum(XMASSFLOW);
         % rend_trans_ex rendement exergetique du transfert de chaleur; P.65
         % rend_rot_ex   rendement exergetique de la turbine; P.65
         % rend_cycl_ex  rendement exergetique du cycle; P.65
-        rend_totex = P_E/P_totex;
-        rend_gex = m_vap*ex_I/(m_c*e_c*10^3);
-        rend_combex =( m_f*(e_f-ex_r))/(P_totex);%unitÃ©?
-        rend_chemex = (e_f-e_exh)/(e_f-ex_r);
-        rend_transex = (m_vap*ex_I)/(m_f*(e_f-e_exh));
+        rend_totex = P_e/P_totex;
+        rend_gex = m_vap*ex_I/(m_comb*e_c*10^3);
+        rend_combex =( m_fum*(e_f-e_r))/(P_totex);%unitÃ©?
+        rend_chemex = (e_f-e_exh)/(e_f-e_r);
+        rend_transex = (m_vap*ex_I)/(m_fum*(e_f-e_exh));
         rend_rotex = (W_mT-W_mP)/(ex_mT-ex_mP);
         rend_cyclex = rend_rotex*(ex_mT-ex_mP)/ex_I;
         
@@ -761,7 +766,7 @@ X_tot = sum(XMASSFLOW);
         % perteex_comb    pertes exergetiques du Ã  la combustion
         % perteex_chimn   pertes exergetiques du Ã  la cheminÃ©e
         % pertex_trans    pertes exergetiques du au transfert de chaleur
-        perte_turbex = P_E/option.eta_SiT(1)*(1/rend_rotex-1);
+        perte_turbex = P_e/eta_SiT_HP*(1/rend_rotex-1);
         perte_combex = P_totex*(1-rend_combex);
         perte_chemex = (e_exh-e_f)-(h_exh-h_f);
         
@@ -823,24 +828,20 @@ X_tot = sum(XMASSFLOW);
         
     end
     %% Display part
-    % if display == 1
-    %     T = linspace(0.001,400,1000);
-    %     S = zeros(1,1000);
-    %     v = 0;
-    %     for i=1:length(T)
-    %         if v == 0
-    %             s = XSteam('sL_T',T);
-    %         elseif v ==1
-    %             s = XSteam('sV_T',T);
-    %         end
-    %         if isnan(s)
-    %             v = 1;
-    %             s = XSteam('sV_T',T);
-    %         else
-    %             S(i) = s;
-    %         end
-    %     end
-    % end
+    if display == 1
+        T = linspace(0.001,400,400);
+        SL = zeros(1,400);
+        SV = zeros(1,400);
+        
+        for i=1:length(T)
+            SL(i) = XSteam('sL_T',T(i));
+            SV(i) = XSteam('sV_T',T(i));
+        end
+        S = [SL SV];
+        T = [T T];
+        plot(S,T)
+        grid on
+    end
 
 end
 

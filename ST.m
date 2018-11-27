@@ -190,7 +190,7 @@ end
 if isfield(options,'T_exhaust')
     T_exhaust = options.T_exhaust;
 else
-    T_exhaust = 120.0;  % [ÃƒÆ’Ã‚Â©C]
+    T_exhaust = 120.0;  % [C]
 end
 
 if isfield(options,'p_3')
@@ -208,31 +208,31 @@ end
 if isfield(options,'T_0')
     T_0 = options.T_0;
 else
-    T_0 = 15.0;  % [ÃƒÆ’Ã‚Â©C]
+    T_0 = 15.0;  % [C]
 end
 
 if isfield(options,'TpinchSub')
     TpinchSub= options.TpinchSub;
 else
-    TpinchSub = 115.0;  % [ÃƒÆ’Ã‚Â©C]
+    TpinchSub = 115.0;  % [C]
 end
 
 if isfield(options,'TpinchEx')
     TpinchEx = options.TpinchEx;
 else
-    TpinchEx = 490.0;  % [ÃƒÆ’Ã‚Â©C]
+    TpinchEx = 490.0;  % [C]
 end
 
 if isfield(options,'TpinchCond')
     TpinchCond= options.TpinchCond;
 else
-    TpinchCond = 18.0;  % [ÃƒÆ’Ã‚Â©C]
+    TpinchCond = 18.0;  % [C]
 end
 
 if isfield(options,'Tdrum')
     Tdrum = options.Tdrum;
 else
-    Tdrum = 120.0;  % [°C]
+    Tdrum = 120.0;  % [�C]
 end
 
 if isfield(options,'eta_SiC')
@@ -242,9 +242,13 @@ else
 end
 
 if isfield(options,'eta_SiT')
-    eta_SiT_HP = options.eta_SiT(1);
-    eta_SiT_others = options.eta_SiT(2);
-    
+    if length(options.eta_SiT) == 2
+        eta_SiT_HP = options.eta_SiT(1);
+        eta_SiT_others = options.eta_SiT(2);        
+    elseif length(options.eta_SiT) == 1
+        eta_SiT_HP = options.eta_SiT; % A MODIFIER SUREMENT
+        eta_SiT_others = eta_SiT_HP;
+    end
 else
     eta_SiT_HP = sqrt(0.88);  % [-]
     eta_SiT_others = sqrt(0.88); % on considere rendement egale pour les turbines MP et BP
@@ -331,17 +335,16 @@ if reheat == 1
     T_50 = T_30;
     h_50 = XSteam('h_pT',p_50,T_50);
     s_50 = XSteam('s_pT',p_50,T_50);
-    %x_50 = XSteam('x_ph',p_50,h_50); = 1 car vapeur surchauffee
+    x_50 = XSteam('x_ph',p_50,h_50);% = NaN car vapeur surchauffee
     e_50 = exergie(h_50,s_50);
     
     %%%%%%%%%%%%%%% ETAT 60 %%%%%%%%%%%%%%%
     % Sortie de la turbine BP dans cas isentropique (60s) et reel (60)
     s_60s = s_50;
-    T_60s = T_cond_out;
-    T_60 = T_cond_out;
+    T_60 = T_cond_out;%-3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
     p_60 = XSteam('psat_T',T_60);
-    x_60s = XSsteam('x_ps',p_60,s_60s);
-    h_60s = XSteam('h_Tx',T_60s,x_60s);
+    x_60s = XSteam('x_ps',p_60,s_60s);
+    h_60s = XSteam('h_Tx',T_60,x_60s);
     
     h_60 = h_50 - eta_SiT_others * (h_50-h_60s) ;
     x_60 = XSteam('x_ph',p_60,h_60);
@@ -356,7 +359,7 @@ elseif reheat == 0
     s_60s = s_30;
     
     % En se basant sur T_cond
-    T_60 = T_cond_out; % -3 si consideration des pertes de charges (a priori non)
+    T_60 = T_cond_out;
     p_60 = XSteam('psat_T',T_60);
     x_60s = XSteam('x_ps',p_60,s_60s);
     h_60s = XSteam('h_Tx',T_60,x_60s);
@@ -373,7 +376,7 @@ end
 
 %%%%%%%%%%%%%%% ETAT 70 %%%%%%%%%%%%%%%
 %Sortie du condenseur, liquide sature
-T_70 = T_60; %car passe simplement de vapeur a liquide saturee
+T_70 = T_60-3; %car passe simplement de vapeur a liquide saturee -3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
 h_70 = XSteam('hL_T',T_70);
 p_70 = XSteam('psat_T',T_70);
 s_70 = XSteam('sL_T',T_70);
@@ -391,22 +394,13 @@ if nsout==0
     x_10 = x_70;
     
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
-    p_20 = p_21; %hypothese
+    p_20 = p_21+8; %hypothese %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
     h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
     h_20=h_10+(h_20s-h_10)/eta_SiC;%h en prenant compte rendement is
     s_20=XSteam('s_ph',p_20,h_20);
     T_20=XSteam('T_ph',p_20,h_20);
     x_20=XSteam('x_ph',p_20,h_20);
     e_20=exergie(h_20,s_20);
-    
-    %% remplissage output
-    
-    DAT(:,1) = [T_10 p_10 h_10 s_10 e_10 x_10]';
-    DAT(:,2) = [T_20 p_20 h_20 s_20 e_20 x_20]';
-    DAT(:,3) = [T_21 p_21 h_21 s_21 e_21 x_21]';
-    DAT(:,4) = [T_22 p_22 h_22 s_22 e_22 x_22]';
-    DAT(:,5) = [T_30 p_30 h_30 s_30 e_30 x_30]';
-    DAT(:,6) = [T_60 p_60 h_60 s_60 e_60 x_60]';
     
 elseif nsout>0
     %%%%%%%%% Calcul etat 61s et 61 %%%%%%%%
@@ -561,6 +555,25 @@ elseif nsout>0
     %%%%%%%%% Calcul etat 90 %%%%%%%%%%
     h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) ));
 end
+%% remplissage output
+
+DAT(:,1) = [T_10 p_10 h_10 s_10 e_10 x_10]';
+DAT(:,2) = [T_20 p_20 h_20 s_20 e_20 x_20]';
+DAT(:,3) = [T_21 p_21 h_21 s_21 e_21 x_21]';
+DAT(:,4) = [T_22 p_22 h_22 s_22 e_22 x_22]';
+DAT(:,5) = [T_30 p_30 h_30 s_30 e_30 x_30]';
+if reheat == 0
+    DAT(:,6) = [T_60 p_60 h_60 s_60 e_60 x_60]';
+elseif reheat == 1
+    DAT(:,6) = [T_40 p_40 h_40 s_40 e_40 x_40]';
+    DAT(:,7) = [T_50 p_50 h_50 s_50 e_50 x_50]';
+    DAT(:,8) = [T_60 p_60 h_60 s_60 e_60 x_60]';
+    if nsout > 0
+        
+    end
+    
+end
+%% Rendements
 X_tot = sum(XMASSFLOW);
     %%%%%%%%% Calcul des rendements %%%%%%%%%%
     % ETA is a vector with :
@@ -823,24 +836,20 @@ X_tot = sum(XMASSFLOW);
         
     end
     %% Display part
-    % if display == 1
-    %     T = linspace(0.001,400,1000);
-    %     S = zeros(1,1000);
-    %     v = 0;
-    %     for i=1:length(T)
-    %         if v == 0
-    %             s = XSteam('sL_T',T);
-    %         elseif v ==1
-    %             s = XSteam('sV_T',T);
-    %         end
-    %         if isnan(s)
-    %             v = 1;
-    %             s = XSteam('sV_T',T);
-    %         else
-    %             S(i) = s;
-    %         end
-    %     end
-    % end
+    if display == 1
+        T = linspace(0.001,400,400);
+        SL = zeros(1,400);
+        SV = zeros(1,400);
+        
+        for i=1:length(T)
+            SL(i) = XSteam('sL_T',T(i));
+            SV(i) = XSteam('sV_T',T(i));
+        end
+        S = [SL SV];
+        T = [T T];
+        plot(S,T)
+        grid on
+    end
 
 end
 
