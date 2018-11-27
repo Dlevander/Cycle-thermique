@@ -12,24 +12,24 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 % OPTIONS is a structure containing :
 %   -options.nsout     [-] : Number of feed-heating
 %   -options.reheat    [-] : Number of reheating
-%   -options.T_max     [Ã‚Â°C] : Maximum steam temperature
-%   -options.T_cond_out[Ã‚Â°C] : Condenseur cold outlet temperature
+%   -options.T_max     [°C] : Maximum steam temperature
+%   -options.T_cond_out[°C] : Condenseur cold outlet temperature
 %   -options.p3_hp     [bar] : Maximum pressure
 %   -options.drumFlag  [-] : if =1 then drum if =0 => no drum.
 %   -options.eta_mec   [-] : mecanic efficiency of shafts bearings
 %   -options.comb is a structure containing combustion data :
-%       -comb.Tmax     [Ã‚Â°C] : maximum combustion temperature
+%       -comb.Tmax     [°C] : maximum combustion temperature
 %       -comb.lambda   [-] : air excess
 %       -comb.x        [-] : the ratio O_x/C. Example 0.05 in CH_1.2O_0.05
 %       -comb.y        [-] : the ratio H_y/C. Example 1.2 in CH_1.2O_0.05
-%   -options.T_exhaust [Ã‚Â°C] : Temperature of exhaust gas out of the chimney
-%   -options.p_3       [-] : High pressure after last reheating
+%   -options.T_exhaust [°C] : Temperature of exhaust gas out of the chimney
+%   -options.p_3       [] : High pressure after last reheating
 %   -options.x4        [-] : Vapor ratio [gaseous/liquid] (in french : titre)
-%   -options.T_0       [Ã‚Â°C] : Reference temperature
-%   -options.TpinchSub [Ã‚Â°C] : Temperature pinch at the subcooler
-%   -options.TpinchEx  [Ã‚Â°C] : Temperature pinch at a heat exchanger
-%   -options.TpinchCond[Ã‚Â°C] : Temperature pinch at condenser
-%   -options.Tdrum     [Ã‚Â°C] : minimal drum temperature
+%   -options.T_0       [°C] : Reference temperature
+%   -options.TpinchSub [°C] : Temperature pinch at the subcooler
+%   -options.TpinchEx  [°C] : Temperature pinch at a heat exchanger
+%   -options.TpinchCond[°C] : Temperature pinch at condenser
+%   -options.Tdrum     [°C] : minimal drum temperature
 %   -option.eta_SiC    [-] : Isotrenpic efficiency for compression
 %   -option.eta_SiT    [-] : Isotrenpic efficiency for Turbine. It can be a vector of 2 values :
 %             	             eta_SiT(1)=eta_SiT_HP,eta_SiT(2)=eta_SiT_others
@@ -64,7 +64,7 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 %   -datex(6) : perte_chemex [kW]
 %   -datex(7) : perte_transex[kW]
 % DAT is a matrix containing :
-% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [°C]
+% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [Â°C]
 %        p_1       , p_2       , ...       , p_6_I,     p_6_II, ... ;  [bar]
 %        h_1       , h_2       , ...       , h_6_I,     h_6_II, ... ;  [kJ/kg]
 %        s_1       , s_2       , ...       , s_6_I,     s_6_II, ... ;  [kJ/kg/K]
@@ -102,11 +102,12 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 
 % Exemple of how to use 'nargin' to check your number of inputs
 if nargin<3
-    display = 1;
+    display == 1;
     if nargin<2
         options = struct();
         if nargin<1
-            P_e = 250e3; % [kW] Puissance ÃƒÂ©nergÃƒÂ©tique de l'installation
+
+            P_e = 250e3; % [kW] Puissance energetique de l'installation
         end
     end
 end
@@ -129,7 +130,9 @@ end
 if isfield(options,'T_max')
     T_max = options.T_max;
 else
-    T_max = 525.0;  % [ÃƒÂ©C]
+
+    T_max = 525.0;  % [C]
+
 end
 
 if isfield(options,'T_cond_out')
@@ -187,7 +190,7 @@ end
 if isfield(options,'T_exhaust')
     T_exhaust = options.T_exhaust;
 else
-    T_exhaust = 120.0;  % [ÃƒÂ©C]
+    T_exhaust = 120.0;  % [ÃƒÆ’Ã‚Â©C]
 end
 
 if isfield(options,'p_3')
@@ -205,31 +208,31 @@ end
 if isfield(options,'T_0')
     T_60 = options.T_0;
 else
-    T_60 = 15.0;  % [ÃƒÂ©C]
+    T_60 = 15.0;  % [ÃƒÆ’Ã‚Â©C]
 end
 
 if isfield(options,'TpinchSub')
     TpinchSub= options.TpinchSub;
 else
-    TpinchSub = 115.0;  % [ÃƒÂ©C]
+    TpinchSub = 115.0;  % [ÃƒÆ’Ã‚Â©C]
 end
 
 if isfield(options,'TpinchEx')
     TpinchEx = options.TpinchEx;
 else
-    TpinchEx = 490.0;  % [ÃƒÂ©C]
+    TpinchEx = 490.0;  % [ÃƒÆ’Ã‚Â©C]
 end
 
 if isfield(options,'TpinchCond')
     TpinchCond= options.TpinchCond;
 else
-    TpinchCond = 18.0;  % [ÃƒÂ©C]
+    TpinchCond = 18.0;  % [ÃƒÆ’Ã‚Â©C]
 end
 
 if isfield(options,'Tdrum')
     Tdrum = options.Tdrum;
 else
-    Tdrum = 30.0;  % [-]
+    Tdrum = 120.0;  % [°C]
 end
 
 if isfield(options,'eta_SiC')
@@ -243,44 +246,43 @@ if isfield(options,'eta_SiT')
     eta_SiT_others = options.eta_SiT(2);
     
 else
-    eta_SiT_HP = 0.9;  % [-] A MODIFIER , PLUSIEURS VALEURS ? DIFFERENTS PAR TURBINE ?
-    eta_SiT_others = 0.92; % on considere rendement egale pour les turbines MP et BP
+    eta_SiT_HP = sqrt(0.88);  % [-]
+    eta_SiT_others = sqrt(0.88); % on considere rendement egale pour les turbines MP et BP
 end
 
-if P_e == null
+if P_e <= 0
     P_e = 35e3; %[kW]
 end
 
 %%%%%%%%%%%%%%% OUTPUT %%%%%%%%%%%%%%%%%%%
 ETA = zeros(9,1);
-eta_cyclen;
-eta_toten;
-eta_cyclex;
-eta_totex;
-eta_gen;
-eta_gex;
-eta_combex;
-eta_chemex;
-eta_transex;
+% eta_cyclen;
+% eta_toten;
+% eta_cyclex;
+% eta_totex;
+% eta_gen;
+% eta_gex;
+% eta_combex;
+% eta_chemex;
+% eta_transex;
 
 
-Xmassflow = zeros(nsout,1);
+XMASSFLOW = zeros(nsout,1);
 
 DATEN = zeros(3,1);
 
 DATEX = zeros(7,1);
 
-numEtat = 7+reheat+nsout;
+%numEtat = 7+reheat+nsout;
 
 DAT= zeros(6,20);
+
+MASSFLOW = 0; %A MODIFIER
+COMBUSTION = 0; %A MODIFIER
+
+FIG = 0; %A MODIFIER
 %% Calcul
 
-%%%%%%%%%%%%%%% ETAT 22 - 21 %%%%%%%%%%%%%%%
-p_22= p3_hp;% surchauffe isobare
-T_22= XSteam('Tsat_p',p_22);% Tsat
-T_21 = T_22; % evaporation isoterme
-h_21 = XSteam('hL_T',T_21);
-p_21 = XSteam('psat_T',T_21);
 %%%%%%%%%%%%%%% ETAT 30 %%%%%%%%%%%%%%%
 
 % Sortie chaudiere
@@ -288,11 +290,25 @@ T_30 = T_max;
 p_30 = p3_hp;
 h_30 = XSteam('h_pT',p_30,T_30);
 s_30 = XSteam('s_pT',p_30,T_30);
-%x_30 = XSteam('x_ph',p_30,h_30); = 1 car vapeur surchauffÃƒÂ©e
+
+x_30 = NaN;% XSteam('x_ph',p_30,h_30); = NaN car vapeur surchauffee
 e_30 = exergie(h_30,s_30);
 
+%%%%%%%%%%%%%%% ETAT 22 %%%%%%%%%%%%%%%
+p_22= p_30;% surchauffe isobare
+T_22= XSteam('Tsat_p',p_22);% Tsat
+h_22= XSteam('hV_p',p_22); 
+s_22= XSteam('sV_p',p_22);
+e_22= exergie(h_22,s_22);
+x_22= 1;
 
-
+%%%%%%%%%%%%%%% ETAT 21 %%%%%%%%%%%%%%%
+T_21 = T_22; % evaporation isoterme
+p_21 = p_22; %XSteam('psat_T',T_21)
+h_21 = XSteam('hL_T',T_21);
+s_21= XSteam('sL_p',p_21);
+e_21= exergie(h_22,s_22);
+x_21= 0;
 %%%%%%%%%%%%%%%% Si resurchauffe %%%%%%%%%%%%%%%
 if reheat == 1
     %%%%%%%%%%%%%%% ETAT 40 %%%%%%%%%%%%%%%
@@ -334,16 +350,21 @@ if reheat == 1
     
     %%%%%%%%%%%%%%%% Si pas resurchauffe %%%%%%%%%%%%%%%
 elseif reheat == 0
+    
     %%%%%%%%%%%%%%% ETAT 60S + 60  %%%%%%%%%%%%%%%
     % Sortie de la turbine BP (60) dans cas isentropique (60s) et reel (60)
-    
     s_60s = s_30;
-    T_60s = T_cond_out;
-    T_60 = T_cond_out;
+    
+    % En se basant sur T_cond 
+    T_60 = T_cond_out; % -3 si consideration des pertes de charges (a priori non)
     p_60 = XSteam('psat_T',T_60);
-    x_60s = XSsteam('x_ps',p_60,s_60s);
-    h_60s = XSteam('h_Tx',T_60s,x_60s);
-    h_60 = h_30 - eta_SiT_HP * eta_SiT_others * (h_30-h_60s) ;
+    x_60s = XSteam('x_ps',p_60,s_60s);
+    h_60s = XSteam('h_Tx',T_60,x_60s);
+%     h_60b = h_30 - eta_SiT_HP * eta_SiT_others * (h_30-h_60s);
+%     h_N = (h_60s*eta_SiT_HP * eta_SiT_others - h_60b)/(eta_SiT_HP * eta_SiT_others - 1); %determination du point N en vue de la regle de Bauman
+%     eta_vap_humide = x4*eta_SiT_HP * eta_SiT_others;
+%     h_60 = h_N - eta_vap_humide * (h_N-h_60s);
+    h_60 = h_30 - eta_SiT_HP * eta_SiT_others * (h_30-h_60s);
     x_60 = XSteam('x_ph',p_60,h_60);
     s_60 = XSteam('s_ph',p_60,h_60);
     e_60 = exergie(h_60,s_60);
@@ -360,6 +381,7 @@ e_70 = exergie(h_70,s_70);
 x_70=XSteam('x_ph',p_70,h_70); %=0 car liquide saturee en sortie de condenseur
 
 if nsout==0
+    %%%%%%%%% Calcul etat  10 %%%%%%%%%%
     %S'il n'y a pas de soutirage le point 1 = point 7 car on coupe avant Pe et on revient au point 1 avant Pa
     T_10 = T_70;
     h_10 = h_70;
@@ -367,6 +389,24 @@ if nsout==0
     s_10 = s_70;
     e_10 = e_70;
     x_10 = x_70;
+    
+    %%%%%%%%% Calcul etat  20 %%%%%%%%%%
+    p_20 = p_21; %hypothese
+    h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
+    h_20=h_10+(h_20s-h_10)/eta_SiC;%h en prenant compte rendement is
+    s_20=XSteam('s_ph',p_20,h_20);
+    T_20=XSteam('T_ph',p_20,h_20);
+    x_20=XSteam('x_ph',p_20,h_20);
+    e_20=exergie(h_20,s_20);
+    
+    %% remplissage output
+    
+    DAT(:,1) = [T_10 p_10 h_10 s_10 e_10 x_10]';
+    DAT(:,2) = [T_20 p_20 h_20 s_20 e_20 x_20]';
+    DAT(:,3) = [T_21 p_21 h_21 s_21 e_21 x_21]';
+    DAT(:,4) = [T_22 p_22 h_22 s_22 e_22 x_22]';
+    DAT(:,5) = [T_30 p_30 h_30 s_30 e_30 x_30]';
+    DAT(:,6) = [T_60 p_60 h_60 s_60 e_60 x_60]';
     
 elseif nsout>0
     %%%%%%%%% Calcul etat 61s et 61 %%%%%%%%
@@ -398,131 +438,7 @@ elseif nsout>0
     end
     
     
-    %% Degasification
-    if drumFlag == 1
-        %%%%%%%%% Calcul etat 7x %%%%%%%%%%
-        p7 = p6; % on considere les vannes de detente apres les etats 7
-        %preallocation
-        T7 = zeros(1,length(T6));
-        h7 = zeros(1,length(T6));
-        % les temperature de condensation sont les temp de sortie des echangeurs
-        h_pT
-        flag = 0;
-        for i=1:length(p7)
-            T7(i) = XSteam('Tsat_p',p7(i));
-            if T7(i) >= 393.15 && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Â°C
-                % calcul de la pression dans le degazificateur
-                T_degaz = T7(i);
-                p_degaz = p7(i); %temperature avant la pompe pb
-                flag = 1;
-                d = i ;
-            end
-            h7(i) = XSteam('h_pT,p7(i),T7(i)');
-        end
-        %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
-        %Apres la pompe Pe, de rendement isentropique option.eta_SiC
-        p_80 = p_degaz ;
-        h_80s = XSteam('h_ps',p_80,s_70); %h dans le cas isentropique
-        h_80=h_70+option.eta_SiC*(h_80s-h_70);%h en prenant compte rendement is
-        s_80=XSteam('s_ph',p_80,h_80);
-        T_80=XSteam('T_ph',p_80,h_80);
-        x_80=XSteam('x_ph',p_80,h_80);
-        e_80=exergie(h_80,s_80);
-        
-        %%%%%%%%% Calcul des etat 9x %%%%%%%%
-        %preallocation
-        p9 = zeros(1,nsout);
-        s9 = zeros(1,nsout);
-        e9 = zeros(1,nsout);
-        
-        T9 = T7-TPinchEx; %si on considere des echangeurs parfaits
-        for i = 1:nsout
-            if i<d
-                p9(i) = p_degaz;
-            else
-                p9(i) = p_;
-            end
-            h9(i) = XSteam('h_pT',p9(i),T9(i));
-            s9(i) = XSteam('s_pT',p9(i),T9(i));
-            e9(i) = exergie(h9(i),s9(i));
-        end
-        
-        %%%%%%%%% Calcul etat 100 %%%%%%%%%%
-        %etat avant la vanne et aprÃ¨s le subcooler
-        T_100 = T_80 + TPinchSub;
-        p_100 = p7(1) ;
-        h_100 = XSteam('h_pT',p_100,T_100);
-        s_100 = XSteam('s_pT',p_100,T_100);
-        x_100 = XSteam('x_ph',p_100,T_100);
-        e_100 = exergie(h_100,s_100);
-        
-        %%%%%%%%% Calcul etat  110 %%%%%%%%%%
-        %etat aprÃ¨s la vanne (isenthalpique), juste avant le condenseur
-        h_110 = h_100;
-        T_110 = T_70;
-        p_110 = p_70;
-        s_110 = XSteam('s_pT',p_110,T_110);
-        x_110 = XSteam('x_ph',p_110,T_110);
-        e_100 = exergie(h_110,s_110);
-        
-        %%%%%%%%% Calcul etat  10 %%%%%%%%%%
-        x_10 = 0; % entierement liquide
-        T_10 = T7(length(T7)-1)-TpinchEx;
-        p_10 = XSteam('psat_T',T_10);
-        h_10 = XSteam('hL_T',T_10);
-        s_10 = XSteam('sL_T',T_10);
-        e_10 = exergie(h_10,h_10);
-        
-        %%%%%%%%% Calcul etat  20 %%%%%%%%%%
-        p_20 = p_21; %hypothese
-        h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
-        h_20=h_10+option.eta_SiC*(h_20s-h_10);%h en prenant compte rendement is
-        s_20=XSteam('s_ph',p_20,h_20);
-        T_20=XSteam('T_ph',p_20,h_20);
-        x_20=XSteam('x_ph',p_20,h_20);
-        e_20=exergie(h_20,s_20);
-        
-        %%%%%%%%% Calcul des Soutirages X %%%%%%%%%%
-        A = zeros(nsout,nsout);
-        B = zeros(nsout,1);
-        %remplissage de la matrice A et B
-        %premiere ligne particuliere
-        A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h80 - h100 + h7(1) );
-        A(1,1) = A(1,1) - ( h7(1) -h6(1) );
-        A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
-        
-        B(1) = h9(1)-h80-h100+h7(1);   
-        for i=2:nsout % i les lignes de la matrice
-            deltaH9  = h9(i) - h9(i-1);
-            deltaH7  = h7(i) - h7(i+1);
-            deltaH76 = h7(i) - h6(i);
-            if i < d
-                A(i,1:d-1) = A(i,1:d-1) + deltaH9;
-                A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
-                A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
-                
-                B(i) = deltaH9;
-            end
-            if i > d
-                A(i,:) = A(i,:) + deltaH9;
-                A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
-                if i < nsout
-                    A(i,i+1:nsout) = A(i,i+1:nsout) - deltaH7;
-                end
-            end
-        end
-        % remplissage ligne d particuliere
-        A(d,1:d-1) = A(d,1:d-1) + h7(d) - h9(d-1);
-        A(d,d) = h7(d) - h6(d);
-        A(d,d+1:nsout) = A(d,d+1:nsout) + h7(d) - h7(d+1);
-        
-        B(d) = h7(d) - h9(d-1);
-        % Resolution
-        XMASSFLOW = A\B;
-        
-        %%%%%%%%% Calcul etat 90 %%%%%%%%%%
-        h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) ));
-        %%
+
         %%%%%%%%% Calcul des rendements %%%%%%%%%%
         % ETA is a vector with :
         %   -eta(1) : eta_cyclen, cycle energy efficiency
@@ -537,8 +453,8 @@ elseif nsout>0
         
         %  ex_mT    exergie du travail moteur de la turbine [kJ/kg]
         %  W_mT     Travail moteur de la turbine
-        %  Q_I      Action calorifique Ã  la chaudiÃ¨re [kJ/kg]
-        %  ex_I     delta d' Exergie Ã  la chaudiÃ¨re [kJ/kg]
+        %  Q_I      Action calorifique ÃƒÂ  la chaudiÃƒÂ¨re [kJ/kg]
+        %  ex_I     delta d' Exergie ÃƒÂ  la chaudiÃƒÂ¨re [kJ/kg]
         ex_mT = 0;
         if reheat == 0
             W_mT = h_30-h_60;
@@ -579,7 +495,7 @@ elseif nsout>0
                     ex_mP = W_mP - T_0*(s_80-s_70 + s9(d) - s7(d) + s_20-s_10);
                 end
                 
-            else % travail fourni a  la pompe sans bache et sans soutirages
+            else % travail fourni aÂ  la pompe sans bache et sans soutirages
                 W_mP = (X_tot+1)*(h_20-h_10);
                 ex_mP = W_mP - T_0*(s_20-s_10);
             end
@@ -646,9 +562,9 @@ elseif nsout>0
             combustion.LHV = LHV;
             combustion.e_c = e_c;
             combustion.lambda = lambda;
-            %%Debit massique combustible et fumées
+            %%Debit massique combustible et fumÃ©es
             T_exh = options.T_exhaust;%T en sortie de cheminee
-            T_f = options.comb.Tmax; %T fumées juste en sortie de combustion
+            T_f = options.comb.Tmax; %T fumÃ©es juste en sortie de combustion
             TK_exh = T_exh+273.15;
             TK_f = T_f+273.15;
             CpMoyO2_f = 1000*mean(janaf('c','O2',linspace(TK_exh,TK_f,50)));
@@ -661,7 +577,7 @@ elseif nsout>0
             m_comb = m_fum/(1+ma1*lambda); %debit combustible
            
             %%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
-            %on change les fractions massiques de (kg/kg_comb) à (kg/kg_fum)
+            %on change les fractions massiques de (kg/kg_comb) Ã  (kg/kg_fum)
             sum = x_O2 + x_CO2 + x_H2O + x_N2 ;
             x_O2 = x_O2/sum;
             x_CO2 = x_CO2/sum;
@@ -675,8 +591,8 @@ elseif nsout>0
             h_exh = x_O2*janaf('h','O2',T_exh+273.15) + x_CO2*janaf('h','CO2',T_exh+273.15) + x_H2OP*janaf('h','H2O',T_exh+273.15) + x_N2*janaf('h','N2',T_exh+273.15);
             s_exh = x_O2*janaf('s','O2',T_exh+273.15) + x_CO2*janaf('s','CO2',T_exh+273.15) + x_H2O*janaf('s','H2O',T_exh+273.15) + x_N2*janaf('s','N2',T_exh+273.15);
             e_exh = exergie(h_exh,s_exh);
-            % Enthalpie, entropie et exergie du mélange fuel+air p32
-            e_r = 0; Pris à letat de reference
+            % Enthalpie, entropie et exergie du mÃ©lange fuel+air p32
+            e_r = 0; Pris Ã  letat de reference
             
             %%Rendement du boiler
             if n_resu ==0
@@ -688,13 +604,13 @@ elseif nsout>0
                     rend_boiler = (m_vap*((X_tot+1)*(h_30-h_20)+ (X_tot+1)*(h_50-h_40)))/(m_c*LHV*10^3);
                 end
              end
-             %%Rendement énergétique du cycle
+             %%Rendement Ã©nergÃ©tique du cycle
             rend_cyclen = (W_mT - W_mP)/Q_I;
             rend_toten = rend_boiler*rend_meca*rend_cyclen;
             %% pertes et puissances
             % Pu_tot 	Puissance Totale
-            % Per_boiler 	pertes à la chaudière
-            % Pu_turb    Puissance à la turbine
+            % Per_boiler 	pertes Ã  la chaudiÃ¨re
+            % Pu_turb    Puissance Ã  la turbine
             % Pe_meca 	pertes mecanique
             % Pe_cond    pertes au condenseur
             Pu_tot = m_c*LHV*10^3;
@@ -703,28 +619,28 @@ elseif nsout>0
             Per_meca = P_turb*(1-option.eta_SiT(1)) + W_mP;
             Per_cond =  P_tot - P_E - Per_boiler - Per_meca;
             
-            %% Rendement exergétique du cycle
+            %% Rendement exergÃ©tique du cycle
             % P_totex    Flux exergetique total
             P_totex = m_c*e_c*10^3;
             % rend_totex    rendement exergetique total
             % rend_I_ex     rendement exergetique du generateur
             % rend_comb_ex  rendement exergetique de la combustion
-            % rend_chim_ex  rendement exergetique de la cheminée; P.65
+            % rend_chim_ex  rendement exergetique de la cheminÃ©e; P.65
             % rend_trans_ex rendement exergetique du transfert de chaleur; P.65
             % rend_rot_ex   rendement exergetique de la turbine; P.65
             % rend_cycl_ex  rendement exergetique du cycle; P.65
             rend_totex = P_E/P_totex;
             rend_gex = m_vap*ex_I/(m_c*e_c*10^3);
-            rend_combex =( m_f*(e_f-ex_r))/(P_totex);%unité?
+            rend_combex =( m_f*(e_f-ex_r))/(P_totex);%unitÃ©?
             rend_chemex = (e_f-e_exh)/(e_f-ex_r);
             rend_transex = (m_vap*ex_I)/(m_f*(e_f-e_exh));
             rend_rotex = (W_mT-W_mP)/(ex_mT-ex_mP);
             rend_cyclex = rend_rotex*(ex_mT-ex_mP)/ex_I;
             
-            %% Pertes exergétiques
+            %% Pertes exergÃ©tiques
             % perteex_pompe   pertes exergetiques du aux  pompes 
-            % perteex_comb    pertes exergetiques du à la combustion
-            % perteex_chimn   pertes exergetiques du à la cheminée
+            % perteex_comb    pertes exergetiques du Ã  la combustion
+            % perteex_chimn   pertes exergetiques du Ã  la cheminÃ©e
             % pertex_trans    pertes exergetiques du au transfert de chaleur
             perte_turbex = P_E/option.eta_SiT(1)*(1/rend_rotex-1);
             perte_combex = P_totex*(1-rend_combex);
@@ -784,9 +700,153 @@ elseif nsout>0
            combustion.fum(1) = x_CO2*m_fum;
            combustion.fum(1) = x_H2O*m_fum;
             
-    %% Display part
-    if display == 1
-        
+    %% Degazification
+    %%%%%%%%% Calcul etat 7x %%%%%%%%%%
+    p7 = p6; % on considere les vannes de detente apres les etats 7
+    %preallocation
+    T7 = zeros(1,length(T6));
+    h7 = zeros(1,length(T6));
+    % les temperature de condensation sont les temp de sortie des echangeurs
+    h_pT
+    flag = 0;
+    for i=1:length(p7)
+        T7(i) = XSteam('Tsat_p',p7(i));
+        if T7(i) >= 393.15 && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Â°C
+            % calcul de la pression dans le degazificateur
+            T_degaz = T7(i);
+            p_degaz = p7(i); %temperature avant la pompe pb
+            flag = 1;
+            d = i ; % endroit du degazificateur
+        end
+        h7(i) = XSteam('h_pT,p7(i),T7(i)');
     end
+    
+    %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
+    %Apres la pompe Pe, de rendement isentropique option.eta_SiC
+    p_80 = p_degaz ;
+    h_80s = XSteam('h_ps',p_80,s_70); %h dans le cas isentropique
+    h_80=h_70+option.eta_SiC*(h_80s-h_70);%h en prenant compte rendement is
+    s_80=XSteam('s_ph',p_80,h_80);
+    T_80=XSteam('T_ph',p_80,h_80);
+    x_80=XSteam('x_ph',p_80,h_80);
+    e_80=exergie(h_80,s_80);
+    
+    %%%%%%%%% Calcul etat  10 %%%%%%%%%%
+    T_10 = T7(length(T7)-1)-TpinchEx;
+    p_10 = p_degaz + (p_21 - p_degaz)/3; % hypothese
+    h_10 = XSteam('hL_T',T_10);
+    s_10 = XSteam('sL_T',T_10);
+    x_10 = NaN;
+    e_10 = exergie(h_10,h_10);
+    
+    %%%%%%%%% Calcul etat  20 %%%%%%%%%%
+    p_20 = p_21; %hypothese
+    h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
+    h_20=h_10+option.eta_SiC*(h_20s-h_10);%h en prenant compte rendement is
+    s_20=XSteam('s_ph',p_20,h_20);
+    T_20=XSteam('T_ph',p_20,h_20);
+    x_20=XSteam('x_ph',p_20,h_20);
+    e_20=exergie(h_20,s_20);
+    
+    %%%%%%%%% Calcul des etat 9x %%%%%%%%
+    %preallocation
+    p9 = zeros(1,nsout);
+    s9 = zeros(1,nsout);
+    e9 = zeros(1,nsout);
+    
+    T9 = T7-TPinchEx; %si on considere des echangeurs parfaits
+    for i = 1:nsout
+        if i<d
+            p9(i) = p_degaz;
+        else
+            p9(i) = p_10;
+        end
+        h9(i) = XSteam('h_pT',p9(i),T9(i));
+        s9(i) = XSteam('s_pT',p9(i),T9(i));
+        e9(i) = exergie(h9(i),s9(i));
+    end
+    
+    %%%%%%%%% Calcul etat 100 %%%%%%%%%%
+    %etat avant la vanne et aprÃ¨s le subcooler
+    T_100 = T_80 + TPinchSub;
+    p_100 = p7(1) ;
+    h_100 = XSteam('h_pT',p_100,T_100);
+    s_100 = XSteam('s_pT',p_100,T_100);
+    x_100 = XSteam('x_ph',p_100,T_100);
+    e_100 = exergie(h_100,s_100);
+    
+    %%%%%%%%% Calcul etat  110 %%%%%%%%%%
+    %etat apres la vanne (isenthalpique), juste avant le condenseur
+    h_110 = h_100;
+    T_110 = T_70;
+    p_110 = p_70;
+    s_110 = XSteam('s_pT',p_110,T_110);
+    x_110 = XSteam('x_ph',p_110,T_110);
+    e_100 = exergie(h_110,s_110);
+    
+    %%%%%%%%% Calcul des Soutirages X %%%%%%%%%%
+    A = zeros(nsout,nsout);
+    B = zeros(nsout,1);
+    %remplissage de la matrice A et B
+    %premiere ligne particuliere
+    A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h80 - h100 + h7(1) );
+    A(1,1) = A(1,1) - ( h7(1) -h6(1) );
+    A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
+    
+    B(1) = h9(1)-h80-h100+h7(1);
+    for i=2:nsout % i les lignes de la matrice
+        deltaH9  = h9(i) - h9(i-1);
+        deltaH7  = h7(i) - h7(i+1);
+        deltaH76 = h7(i) - h6(i);
+        if i < d
+            A(i,1:d-1) = A(i,1:d-1) + deltaH9;
+            A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
+            A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
+            
+            B(i) = deltaH9;
+        end
+        if i > d
+            A(i,:) = A(i,:) + deltaH9;
+            A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
+            if i < nsout
+                A(i,i+1:nsout) = A(i,i+1:nsout) - deltaH7;
+            end
+        end
+    end
+    % remplissage ligne d particuliere
+    A(d,1:d-1) = A(d,1:d-1) + h7(d) - h9(d-1);
+    A(d,d) = h7(d) - h6(d);
+    A(d,d+1:nsout) = A(d,d+1:nsout) + h7(d) - h7(d+1);
+    
+    B(d) = h7(d) - h9(d-1);
+    % Resolution
+    XMASSFLOW = A\B;
+    
+    %%%%%%%%% Calcul etat 90 %%%%%%%%%%
+    h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) ));
+    
+
 end
+%% Display part
+% if display == 1
+%     T = linspace(0.001,400,1000);
+%     S = zeros(1,1000);
+%     v = 0;
+%     for i=1:length(T)
+%         if v == 0
+%             s = XSteam('sL_T',T);
+%         elseif v ==1
+%             s = XSteam('sV_T',T);
+%         end
+%         if isnan(s)
+%             v = 1;
+%             s = XSteam('sV_T',T);
+%         else
+%             S(i) = s;
+%         end
+%     end
+% end
+end
+
+
 
