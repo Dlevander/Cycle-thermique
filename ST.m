@@ -102,7 +102,7 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 
 % Exemple of how to use 'nargin' to check your number of inputs
 if nargin<3
-    display == 1;
+    display = 1;
     if nargin<2
         options = struct();
         if nargin<1
@@ -131,7 +131,7 @@ if isfield(options,'T_max')
     T_max = options.T_max;
 else
     
-    T_max = 525.0;  % [C]
+    T_max = 520.0;  % [C]
     
 end
 
@@ -214,13 +214,13 @@ end
 if isfield(options,'TpinchSub')
     TpinchSub= options.TpinchSub;
 else
-    TpinchSub = 115.0;  % [C]
+    TpinchSub = 15.0;  % [C]
 end
 
 if isfield(options,'TpinchEx')
     TpinchEx = options.TpinchEx;
 else
-    TpinchEx = 490.0;  % [C]
+    TpinchEx = 10.0;  % [C]
 end
 
 if isfield(options,'TpinchCond')
@@ -265,7 +265,7 @@ DATEN = zeros(3,1);
 DATEX = zeros(7,1);
 %numEtat = 7+reheat+nsout;
 
-DAT= zeros(6,35);
+DAT= zeros(6,6);
 
 MASSFLOW = 0; %A MODIFIER
 COMBUSTION = 0; %A MODIFIER
@@ -348,10 +348,6 @@ elseif reheat == 0
     p_60 = XSteam('psat_T',T_60);
     x_60s = XSteam('x_ps',p_60,s_60s);
     h_60s = XSteam('h_Tx',T_60,x_60s);
-    %     h_60b = h_30 - eta_SiT_HP * eta_SiT_others * (h_30-h_60s);
-    %     h_N = (h_60s*eta_SiT_HP * eta_SiT_others - h_60b)/(eta_SiT_HP * eta_SiT_others - 1); %determination du point N en vue de la regle de Bauman
-    %     eta_vap_humide = x4*eta_SiT_HP * eta_SiT_others;
-    %     h_60 = h_N - eta_vap_humide * (h_N-h_60s);
     h_60 = h_30 - eta_SiT_HP * eta_SiT_others * (h_30-h_60s);
     x_60 = XSteam('x_ph',p_60,h_60);
     s_60 = XSteam('s_ph',p_60,h_60);
@@ -379,7 +375,7 @@ if nsout==0
     x_10 = x_70;
     
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
-    p_20 = p_21+4; %hypothese %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
+    p_20 = p_21; %hypothese %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
     h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
     h_20=h_10+(h_20s-h_10)/eta_SiC;%h en prenant compte rendement is
     s_20=XSteam('s_ph',p_20,h_20);
@@ -400,7 +396,7 @@ elseif nsout>0
         p6s(i) = XSteam('p_hs',h6s(i),s_60); % XSteam, pas de vecteur en arg
     end
     p6 = p6s; %hypothese
-    h6=h_50+eta_SiC*(h6s-h_50);
+    h6=h_50+eta_SiT_others*(h_50-h6s);
     
     % l'echangeur en sortie de HP a son etat deja defini
     h6 = [h6 h_40];
@@ -427,14 +423,15 @@ elseif nsout>0
     d = 0;
     for i=1:length(p7)
         T7(i) = XSteam('Tsat_p',p7(i));
-        if T7(i) >= 393.15 && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Â°C
+        if T7(i) >= Tdrum && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Â°C
             % calcul de la pression dans le degazificateur
             T_degaz = T7(i);
             p_degaz = p7(i); %temperature avant la pompe pb
             flag = 1;
             d = i ; % endroit du degazificateur
         end
-        h7(i) = XSteam('h_pT',p7(i),T7(i));
+        %h7(i) = XSteam('h_pT',p7(i),T7(i));
+        h7(i) = XSteam('hL_p',p7(i));
     end
     
     %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
@@ -470,7 +467,7 @@ elseif nsout>0
     s9 = zeros(1,nsout);
     e9 = zeros(1,nsout);
     
-    T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
+    T9 = T7+TpinchEx; %si on considere des echangeurs parfaits
     for i = 1:nsout
         if i<d
             p9(i) = p_degaz;
@@ -483,7 +480,7 @@ elseif nsout>0
     end
     
     %%%%%%%%% Calcul etat 100 %%%%%%%%%%
-    %etat avant la vanne et aprÃ¨s le subcooler
+    %etat avant la vanne et apres le subcooler
     T_100 = T_80 + TpinchSub;
     p_100 = p7(1) ;
     h_100 = XSteam('h_pT',p_100,T_100);
@@ -511,14 +508,15 @@ elseif nsout>0
     
     B(1) = h9(1)-h_80-h_100+h7(1);
     for i=2:nsout % i les lignes de la matrice
+        if i < nsout
+            deltaH7  = h7(i) - h7(i+1);
+        end
         deltaH9  = h9(i) - h9(i-1);
-        deltaH7  = h7(i) - h7(i+1);
         deltaH76 = h7(i) - h6(i);
         if i < d
             A(i,1:d-1) = A(i,1:d-1) + deltaH9;
             A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
             A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
-            
             B(i) = deltaH9;
         end
         if i > d
@@ -527,13 +525,14 @@ elseif nsout>0
             if i < nsout
                 A(i,i+1:nsout) = A(i,i+1:nsout) - deltaH7;
             end
+            B(i) = deltaH9;
         end
     end
     % remplissage ligne d particuliere
     A(d,1:d-1) = A(d,1:d-1) + h7(d) - h9(d-1);
     A(d,d) = h7(d) - h6(d);
     A(d,d+1:nsout) = A(d,d+1:nsout) + h7(d) - h7(d+1);
-    
+    %Ax=B
     B(d) = h7(d) - h9(d-1);
     % Resolution
     XMASSFLOW = A\B;
@@ -825,29 +824,19 @@ X_tot = sum(XMASSFLOW);
         combustion.fum(1) = x_N2*m_fum;
         combustion.fum(1) = x_CO2*m_fum;
         combustion.fum(1) = x_H2O*m_fum;
-        
-        
-        
+
     end
     %% Display part
     if display == 1
-        T = linspace(0.001,400,400);
-        SL = zeros(1,400);
-        SV = zeros(1,400);
-        
-        for i=1:length(T)
-            SL(i) = XSteam('sL_T',T(i));
-            SV(i) = XSteam('sV_T',T(i));
+        if reheat == 0
+            if nsout == 0
+                FIG = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others); 
+            else
+                
+            end
+        elseif reheat == 1
+            FIG = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
         end
-        FIG(1) = figure;
-        hold on
-        %cloche de base
-        plot(SL,T,'-b',SV,T,'-b')
-        linS = [linspace(DAT(4,1),DAT(4,5),1000)];% linspace(DAT(4,2),DAT(4,3),1000) linspace(DAT(4,3),DAT(4,4),1000) linspace(DAT(4,4),DAT(4,5),1000) linspace(DAT(4,5),DAT(4,6),100)];
-        linT = arrayfun( @(s) XSteam('T_ps',DAT(2,2),s),linS);
-        plot(DAT(4,:),DAT(1,:),'x')
-        plot(linS,linT)
-        grid on
     end
 
 end
