@@ -1,4 +1,5 @@
-function [FIG] = plotRHreheat1(DAT,eta_SiT_HP,eta_SiT_others)
+function [FIG] = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others)
+        close all
         T = linspace(0,400,400);
         SL = arrayfun( @(t) XSteam('sL_T',t),T);
         SV = arrayfun( @(t) XSteam('sV_T',t),T);
@@ -25,7 +26,7 @@ function [FIG] = plotRHreheat1(DAT,eta_SiT_HP,eta_SiT_others)
         linH34s = arrayfun( @(p,s) XSteam('h_ps',p,s),linP34,linS34s);
         linH34 = DAT(3,5) - eta_SiT_HP * (DAT(3,5)-linH34s);
         linS34 = arrayfun( @(p,h) XSteam('s_ph',p,h),linP34,linH34);
-        linT34 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP34,linS34s);
+        linT34 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP34,linS34);
         
         %plot reheat 4-5
         linS45 = linspace(DAT(4,6),DAT(4,7),1000);
@@ -37,14 +38,14 @@ function [FIG] = plotRHreheat1(DAT,eta_SiT_HP,eta_SiT_others)
         linH56s = arrayfun( @(p,s) XSteam('h_ps',p,s),linP56,linS56s);
         linH56 = DAT(3,7) - eta_SiT_others * (DAT(3,7)-linH56s);
         linS56 = arrayfun( @(p,h) XSteam('s_ph',p,h),linP56,linH56);
-        linT56 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP56,linS56s);
+        linT56 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP56,linS56);
         
         %plot condens
         linS61 = linspace(DAT(4,1),DAT(4,8),1000);
         linT61 = DAT(1,8)*ones(1,1000);
         
         %plot 
-        plot([linS13 linS34 linS45 linS56 linS61],[linT13 linT34 linT45 linT56 linT61])
+        plot([linS13 linS34 linS45 linS56 linS61],[linT13 linT34 linT45 linT56 linT61],'r')
         plot(DAT(4,:),DAT(1,:),'x')
 %% Diagramme h-s
         FIG(2) = figure;

@@ -220,7 +220,7 @@ end
 if isfield(options,'TpinchEx')
     TpinchEx = options.TpinchEx;
 else
-    TpinchEx = 10.0;  % [C]
+    TpinchEx = 15.0;  % [C]
 end
 
 if isfield(options,'TpinchCond')
@@ -853,6 +853,19 @@ X_tot = sum(XMASSFLOW);
         combustion.fum(2) = x_N2*m_fum;
         combustion.fum(3) = x_CO2*m_fum;
         combustion.fum(4) = x_H2O*m_fum;
-      end
-        
+
+%% Display part
+    if display == 1
+        if reheat == 0
+            if nsout == 0
+                FIG = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others); 
+            else
+                
+            end
+        elseif reheat == 1
+            FIG = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
+        end
+    end
+
+end
         

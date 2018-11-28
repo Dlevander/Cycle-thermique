@@ -16,8 +16,8 @@ optionsST.p_3 = 10.5; %      [-] : High pressure after last reheating
 %   -options.x4        [-] : Vapor ratio [gaseous/liquid] (in french : titre)
 %   -options.T_0       [°C] : Reference temperature
 %   -options.TpinchSub [°C] : Temperature pinch at the subcooler
-%   -options.TpinchEx  [°C] : Temperature pinch at a heat exchanger
-%   -options.TpinchCond[°C] : Temperature pinch at condenser
+optionsST.TpinchEx = 15;%  [°C] : Temperature pinch at a heat exchanger
+optionsST.TpinchCond = 3;%[°C] : Temperature pinch at condenser
 %   -options.Tdrum     [°C] : minimal drum temperature
 optionsST.eta_SiC = 0.85;%   [-] : Isotrenpic efficiency for compression
 optionsST.eta_SiT = 0.89;   %[-] : Isotrenpic efficiency for Turbine. It can be a vector of 2 values :

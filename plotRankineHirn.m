@@ -28,7 +28,7 @@ function [FIG] = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others)
         linT61 = DAT(1,6)*ones(1,1000);
  
         %plot
-        plot([linS13 linS36 linS61],[linT13 linT36 linT61])
+        plot([linS13 linS36 linS61],[linT13 linT36 linT61],'r')
         plot(DAT(4,:),DAT(1,:),'x')
         %% Diagramme h-s
         FIG(2) = figure;
