@@ -260,23 +260,9 @@ end
 
 %%%%%%%%%%%%%%% OUTPUT %%%%%%%%%%%%%%%%%%%
 ETA = zeros(9,1);
-% eta_cyclen;
-% eta_toten;
-% eta_cyclex;
-% eta_totex;
-% eta_gen;
-% eta_gex;
-% eta_combex;
-% eta_chemex;
-% eta_transex;
-
-
 XMASSFLOW = zeros(nsout,1);
-
 DATEN = zeros(3,1);
-
 DATEX = zeros(7,1);
-
 %numEtat = 7+reheat+nsout;
 
 DAT= zeros(6,35);
@@ -294,7 +280,6 @@ T_30 = T_max;
 p_30 = p3_hp;
 h_30 = XSteam('h_pT',p_30,T_30);
 s_30 = XSteam('s_pT',p_30,T_30);
-
 x_30 = NaN;% XSteam('x_ph',p_30,h_30); = NaN car vapeur surchauffee
 e_30 = exergie(h_30,s_30);
 
@@ -376,7 +361,7 @@ end
 
 %%%%%%%%%%%%%%% ETAT 70 %%%%%%%%%%%%%%%
 %Sortie du condenseur, liquide sature
-T_70 = T_60-1; %car passe simplement de vapeur a liquide saturee -3 pour RH1, -1 pour 1reheat8nsout
+T_70 = T_60; %car passe simplement de vapeur a liquide saturee -3 pour RH1, -1 pour 1reheat8nsout
 h_70 = XSteam('hL_T',T_70);
 p_70 = XSteam('psat_T',T_70);
 s_70 = XSteam('sL_T',T_70);
@@ -394,7 +379,7 @@ if nsout==0
     x_10 = x_70;
     
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
-    p_20 = p_21+8; %hypothese %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
+    p_20 = p_21+4; %hypothese %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
     h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
     h_20=h_10+(h_20s-h_10)/eta_SiC;%h en prenant compte rendement is
     s_20=XSteam('s_ph',p_20,h_20);
@@ -406,8 +391,8 @@ elseif nsout>0
     %%%%%%%%% Calcul etat 61s et 61 %%%%%%%%
     % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
     
-    h6s_temp = linspace(h_60s,h_50s,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
-    h6s = h6_temp(2:length(h6s_temp)-1);
+    h6s_temp = linspace(h_60s,h_50,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
+    h6s = h6s_temp(2:length(h6s_temp)-1);
     s_60 = s_50;
     p6s = zeros(1,length(h6s));
     
@@ -415,12 +400,12 @@ elseif nsout>0
         p6s(i) = XSteam('p_hs',h6s(i),s_60); % XSteam, pas de vecteur en arg
     end
     p6 = p6s; %hypothese
-    h6=h_50+option.eta_SiC*(h_6s-h_50);
+    h6=h_50+eta_SiC*(h6s-h_50);
     
     % l'echangeur en sortie de HP a son etat deja defini
     h6 = [h6 h_40];
     p6 = [p6 p_40];
-    
+    %x_60 = x_40;
     %preallocation
     T6 = zeros(1,length(h6)-1);
     x6 = zeros(1,length(T6));
@@ -437,8 +422,9 @@ elseif nsout>0
     T7 = zeros(1,length(T6));
     h7 = zeros(1,length(T6));
     % les temperature de condensation sont les temp de sortie des echangeurs
-    h_pT
     flag = 0;
+    p_degaz = 0;
+    d = 0;
     for i=1:length(p7)
         T7(i) = XSteam('Tsat_p',p7(i));
         if T7(i) >= 393.15 && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Â°C
@@ -448,14 +434,14 @@ elseif nsout>0
             flag = 1;
             d = i ; % endroit du degazificateur
         end
-        h7(i) = XSteam('h_pT,p7(i),T7(i)');
+        h7(i) = XSteam('h_pT',p7(i),T7(i));
     end
     
     %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
     %Apres la pompe Pe, de rendement isentropique option.eta_SiC
     p_80 = p_degaz ;
     h_80s = XSteam('h_ps',p_80,s_70); %h dans le cas isentropique
-    h_80=h_70+option.eta_SiC*(h_80s-h_70);%h en prenant compte rendement is
+    h_80=h_70+eta_SiC*(h_80s-h_70);%h en prenant compte rendement is
     s_80=XSteam('s_ph',p_80,h_80);
     T_80=XSteam('T_ph',p_80,h_80);
     x_80=XSteam('x_ph',p_80,h_80);
@@ -472,7 +458,7 @@ elseif nsout>0
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
     p_20 = p_21; %hypothese
     h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
-    h_20=h_10+option.eta_SiC*(h_20s-h_10);%h en prenant compte rendement is
+    h_20=h_10+eta_SiC*(h_20s-h_10);%h en prenant compte rendement is
     s_20=XSteam('s_ph',p_20,h_20);
     T_20=XSteam('T_ph',p_20,h_20);
     x_20=XSteam('x_ph',p_20,h_20);
@@ -484,7 +470,7 @@ elseif nsout>0
     s9 = zeros(1,nsout);
     e9 = zeros(1,nsout);
     
-    T9 = T7-TPinchEx; %si on considere des echangeurs parfaits
+    T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
     for i = 1:nsout
         if i<d
             p9(i) = p_degaz;
@@ -498,7 +484,7 @@ elseif nsout>0
     
     %%%%%%%%% Calcul etat 100 %%%%%%%%%%
     %etat avant la vanne et aprÃ¨s le subcooler
-    T_100 = T_80 + TPinchSub;
+    T_100 = T_80 + TpinchSub;
     p_100 = p7(1) ;
     h_100 = XSteam('h_pT',p_100,T_100);
     s_100 = XSteam('s_pT',p_100,T_100);
@@ -519,11 +505,11 @@ elseif nsout>0
     B = zeros(nsout,1);
     %remplissage de la matrice A et B
     %premiere ligne particuliere
-    A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h80 - h100 + h7(1) );
+    A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h_80 - h_100 + h7(1) );
     A(1,1) = A(1,1) - ( h7(1) -h6(1) );
     A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
     
-    B(1) = h9(1)-h80-h100+h7(1);
+    B(1) = h9(1)-h_80-h_100+h7(1);
     for i=2:nsout % i les lignes de la matrice
         deltaH9  = h9(i) - h9(i-1);
         deltaH7  = h7(i) - h7(i+1);
@@ -651,13 +637,15 @@ X_tot = sum(XMASSFLOW);
             Cp_comb = 1000*35.8/MmComb; %J/(kg_comb*K)
             % Fractions massiques des reactifs (kg/kg_comb)
             Comb_R = 1;
-            O2_R = 2*lambda*32/MmComb;
-            N2_R = 2*lambda*3.76*28/MmComb;
-            % Fractions massiques des produits (kg/kg_comb)
-            x_O2 = 2*(lambda-1)*32/MmComb;
-            x_CO2 = 44/MmComb;
-            x_H2O = 2*18/MmComb;
-            x_N2 = 2*lambda*3.76*28/MmComb;
+            O2_R = 2*lambda*32;
+            N2_R = 2*lambda*3.76*28;
+            % Fractions massiques des produits (g/mol_comb)
+            x_O2 = 2*(lambda-1)*32;
+            x_CO2 = 44;
+            x_H2O = 2*18;
+            x_N2 = 2*lambda*3.76*28;
+            Sum = x_O2 + x_CO2 + x_H2O + x_N2 ; %TEST
+            
             
         elseif x == 0 && y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
             LHV = 32780; % [kJ/kg]
@@ -692,6 +680,8 @@ X_tot = sum(XMASSFLOW);
             x_N2 = 5*lambda*3.76*28/MmComb;
             
         end
+        %Soit on donne lambda soit Tf, liee par p.207 eq 10.6 dans l'ancien
+        %bouquin epsilon = 0 et hc =0
         ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb] % x toujours egal a 0
         %ma1 = (1+(y-2*x)/4)*(32+3.76*28.15)/(12.01+1.008*y+16*x);
         combustion.LHV = LHV;
@@ -699,21 +689,22 @@ X_tot = sum(XMASSFLOW);
         combustion.lambda = lambda;
         %%Debit massique combustible et fumees
         T_exh = T_exhaust;%T en sortie de cheminee
-        T_f = Tmax; %T fumÃ©es juste en sortie de combustion
+        T_f = Tmax; %T fumees juste en sortie de combustion
         TK_exh = T_exh+273.15;
         TK_f = T_f+273.15;
         CpMoyO2_f = 1000*mean(janaf('c','O2',linspace(TK_exh,TK_f,50)));
         CpMoyCO2_f = 1000*mean(janaf('c','CO2',linspace(TK_exh,TK_f,50)));
         CpMoyN2_f = 1000*mean(janaf('c','N2',linspace(TK_exh,TK_f,50)));
         CpMoyH2O_f = 1000*mean(janaf('c','H2O',linspace(TK_exh,TK_f,50)));
-        CpMoy_f = CpMoyH2O_f + CpMoyCO2_f + CpMoyO2_f+CpMoyN2_f;
-        delta_h=CpMoy_f*(T_exh-T_f);%kj
-        m_fum = m_vap*Q_I/delta_h; %debit fumees
-        m_comb = m_fum/(1+ma1*lambda); %debit combustible
-        
+        CpMoy_f = (CpMoyH2O_f*x_H2O + CpMoyCO2_f*x_CO2 + CpMoyO2_f*x_O2+CpMoyN2_f*x_N2)/Sum; % somme pondere non ?
+        delta_h=CpMoy_f*(T_f-T_exh);%kj/kg %inverse par rapport a avant
+        m_fum = m_vap*Q_I*1e3/delta_h; %debit fumees
+        %m_comb = m_fum/(1+ma1*lambda); %debit combustible
+        m_comb = m_vap*Q_I/(LHV*0.945); %[kg/s]
+        m_a = lambda*ma1*m_comb; %[kg/s]
         %%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
         %on change les fractions massiques de (kg/kg_comb) (kg/kg_fum)
-        Sum = x_O2 + x_CO2 + x_H2O + x_N2 ;
+
         x_O2 = x_O2/Sum;
         x_CO2 = x_CO2/Sum;
         x_N2 = x_N2/Sum;
@@ -821,7 +812,7 @@ X_tot = sum(XMASSFLOW);
         DATEX(6) = perte_chemex;
         DATEX(7) = 0;
         
-        MASSFLOW(1) = ma1;
+        MASSFLOW(1) = m_a; %ma1; % faux m_air pas ma1
         MASSFLOW(2) = m_vap;
         MASSFLOW(3) = m_comb;
         MASSFLOW(4) = m_fum;
@@ -848,9 +839,14 @@ X_tot = sum(XMASSFLOW);
             SL(i) = XSteam('sL_T',T(i));
             SV(i) = XSteam('sV_T',T(i));
         end
-        S = [SL SV];
-        T = [T T];
-        plot(S,T)
+        FIG(1) = figure;
+        hold on
+        %cloche de base
+        plot(SL,T,'-b',SV,T,'-b')
+        linS = [linspace(DAT(4,1),DAT(4,5),1000)];% linspace(DAT(4,2),DAT(4,3),1000) linspace(DAT(4,3),DAT(4,4),1000) linspace(DAT(4,4),DAT(4,5),1000) linspace(DAT(4,5),DAT(4,6),100)];
+        linT = arrayfun( @(s) XSteam('T_ps',DAT(2,2),s),linS);
+        plot(DAT(4,:),DAT(1,:),'x')
+        plot(linS,linT)
         grid on
     end
 

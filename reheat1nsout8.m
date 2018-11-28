@@ -1,4 +1,15 @@
+clear all 
+close all
 %% Rankine Hirn reheat 1
+% Toujours donnee :
+% - nsout
+% - reheat
+% - T_cond_out
+% - eta_mec
+% - eta_SiC
+% - eta_SiT
+% - 
+
 optionsST.nsout = 8;   %  [-] : Number of feed-heating
 optionsST.reheat  = 1; %  [-] : Number of reheating
 optionsST.T_max = 565; %  [°C] : Maximum steam temperature
@@ -25,5 +36,5 @@ optionsST.eta_SiT = 0.89;   %[-] : Isotrenpic efficiency for Turbine. It can be 
 
 P_e = 288e3;
 
-[ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,optionsST,0)
+[ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,optionsST,1)
 

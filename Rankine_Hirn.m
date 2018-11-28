@@ -1,3 +1,5 @@
+clear all 
+close all
 %% Rankine Hirn
 optionsST.nsout = 0;   %  [-] : Number of feed-heating
 optionsST.reheat  = 0; %  [-] : Number of reheating
@@ -17,7 +19,7 @@ optionsST.p3_hp = 40;    %  [bar] : Maximum pressure
 %   -options.T_0       [°C] : Reference temperature
 %   -options.TpinchSub [°C] : Temperature pinch at the subcooler
 %   -options.TpinchEx  [°C] : Temperature pinch at a heat exchanger
-%   -options.TpinchCond[°C] : Temperature pinch at condenser
+optionsST.TpinchCond = 3; %[°C] : Temperature pinch at condenser
 %   -options.Tdrum     [°C] : minimal drum temperature
 optionsST.eta_SiC = 0.85;%   [-] : Isotrenpic efficiency for compression
 %   -option.eta_SiT    [-] : Isotrenpic efficiency for Turbine. It can be a vector of 2 values :
@@ -26,16 +28,16 @@ optionsST.eta_SiC = 0.85;%   [-] : Isotrenpic efficiency for compression
 P_e = 35e3;
 
 [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,optionsST,1)
-
-T = linspace(0.001,400,400);
-SL = zeros(1,400);
-SV = zeros(1,400);
-
-for i=1:length(T)
-    SL(i) = XSteam('sL_T',T(i));
-    SV(i) = XSteam('sV_T',T(i));
-end
-S = [SL SV];
-T = [T T];
-plot(S,T)
-grid on
+% 
+% T = linspace(0.001,400,400);
+% SL = zeros(1,400);
+% SV = zeros(1,400);
+% 
+% for i=1:length(T)
+%     SL(i) = XSteam('sL_T',T(i));
+%     SV(i) = XSteam('sV_T',T(i));
+% end
+% S = [SL SV];
+% T = [T T];
+% plot(S,T)
+% grid on
