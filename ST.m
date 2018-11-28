@@ -732,7 +732,7 @@ X_tot = sum(XMASSFLOW);
           s_exh = CpMoy_f*log((TK_exh)/(T_janaf+273));
         % h_exh = x_O2*janaf('h','O2',T_exh+273.15) + x_CO2*janaf('h','CO2',T_exh+273.15) + x_H2O*janaf('h','H2O',T_exh+273.15) + x_N2*janaf('h','N2',T_exh+273.15);
          %s_exh = x_O2*janaf('s','O2',T_exh+273.15) + x_CO2*janaf('s','CO2',T_exh+273.15) + x_H2O*janaf('s','H2O',T_exh+273.15) + x_N2*janaf('s','N2',T_exh+273.15);
-         e_exh = (h_exh-hRef)-(T_0+273.15)*(s_exh-sRef); %kJ/kg
+         e_exh = ((h_exh-hRef)-(T_0+273.15)*(s_exh-sRef))/1000; %kJ/kg
         % Enthalpie, entropie et exergie du melange fuel+air p32
         e_r = 0; %Pris a letat de reference
         
