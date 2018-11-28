@@ -7,33 +7,44 @@ function [FIG] = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others)
         %% Diagramme T-s
         FIG(1) = figure;
         hold on
+        grid on
+        title('Diagramme T-s')
+        xlabel('s [kj/kg K]')
+        ylabel('T [°C]')
         %cloche de base
         plot(SL,T,'-b',SV,T,'-b')
-        %plot isobare 1 a 5
-        linS15 = linspace(DAT(4,1),DAT(4,5),1000);% linspace(DAT(4,2),DAT(4,3),1000) linspace(DAT(4,3),DAT(4,4),1000) linspace(DAT(4,4),DAT(4,5),1000) linspace(DAT(4,5),DAT(4,6),100)];
-        linT15 = arrayfun( @(s) XSteam('T_ps',DAT(2,2),s),linS15);
+        %plot isobare 1 a 3
+        linS13 = linspace(DAT(4,1),DAT(4,5),1000);% linspace(DAT(4,2),DAT(4,3),1000) linspace(DAT(4,3),DAT(4,4),1000) linspace(DAT(4,4),DAT(4,5),1000) linspace(DAT(4,5),DAT(4,6),100)];
+        linT13 = arrayfun( @(s) XSteam('T_ps',DAT(2,2),s),linS13);
         %plot detente
-        linP56 = linspace(DAT(2,5),DAT(2,6),1000);
-        linS56s = DAT(4,5)*ones(1,1000); %linspace(DAT(4,5),DAT(4,6),1000);
-        linH56s = arrayfun( @(p,s) XSteam('h_ps',p,s),linP56,linS56s);
-        linH56 = DAT(3,5) - eta_SiT_HP * eta_SiT_others * (DAT(3,5)-linH56s);
-        linS56 = arrayfun( @(p,h) XSteam('s_ph',p,h),linP56,linH56);
-        linT56 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP56,linS56s);
+        linP36 = linspace(DAT(2,5),DAT(2,6),1000);
+        linS36s = DAT(4,5)*ones(1,1000); %linspace(DAT(4,5),DAT(4,6),1000);
+        linH36s = arrayfun( @(p,s) XSteam('h_ps',p,s),linP36,linS36s);
+        linH36 = DAT(3,5) - eta_SiT_HP * eta_SiT_others * (DAT(3,5)-linH36s);
+        linS36 = arrayfun( @(p,h) XSteam('s_ph',p,h),linP36,linH36);
+        linT36 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP36,linS36s);
         %plot condens
         linS61 = linspace(DAT(4,1),DAT(4,6),1000);
         linT61 = DAT(1,6)*ones(1,1000);
+ 
+        %plot
+        plot([linS13 linS36 linS61],[linT13 linT36 linT61])
         plot(DAT(4,:),DAT(1,:),'x')
-        plot([linS15 linS56 linS61],[linT15 linT56 linT61])
-        grid on
         %% Diagramme h-s
         FIG(2) = figure;
         hold on
         grid on
+        title('Diagramme h-s')
+        xlabel('h [kj/kg]')
+        ylabel('T [°C]')
         %cloche de base
         plot(SL,HL,'-b',SV,HV,'-b')
-        %plot isobare 1 a 5
-        linH15 = arrayfun( @(s) XSteam('h_ps',DAT(2,2),s),linS15);
+        %plot isobare 1 a 3
+        linH13 = arrayfun( @(s) XSteam('h_ps',DAT(2,2),s),linS13);
         %plot condens
         linH61 = arrayfun( @(s) XSteam('h_ps',DAT(2,6),s),linS61);
-        plot([linS15 linS56 linS61],[linH15 linH56 linH61],'r')
+        
+        %plot
+        plot(DAT(4,:),DAT(3,:),'x')
+        plot([linS13 linS36 linS61],[linH13 linH36 linH61],'r')
 end
