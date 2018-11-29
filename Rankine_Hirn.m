@@ -13,7 +13,7 @@ optionsST.p3_hp = 40;    %  [bar] : Maximum pressure
 %       -comb.lambda   [-] : air excess
 %       -comb.x        [-] : the ratio O_x/C. Example 0.05 in CH_1.2O_0.05
 %       -comb.y        [-] : the ratio H_y/C. Example 1.2 in CH_1.2O_0.05
-%   -options.T_exhaust [°C] : Temperature of exhaust gas out of the chimney
+optionsST.T_exhaust = 120;% [°C] : Temperature of exhaust gas out of the chimney
 %optionsST.p_3 = 40; %      [-] : High pressure after last reheating
 %   -options.x4        [-] : Vapor ratio [gaseous/liquid] (in french : titre)
 %   -options.T_0       [°C] : Reference temperature
