@@ -564,12 +564,24 @@ elseif reheat == 1
         DAT(:,12+noust:11+2*nsout) = [T9;p9;h9;s9;e9;x9];
     end  
 end
-%% Combustion
+%% Rendements
 X_tot = sum(XMASSFLOW);
+      %%%%%%%%% Calcul des rendements %%%%%%%%%%
+    % ETA is a vector with :
+    %   -eta(1) : eta_cyclen, cycle energy efficiency
+    %   -eta(2) : eta_toten, overall energy efficiency
+    %   -eta(3) : eta_cyclex, cycle exegy efficiency
+    %   -eta(4) : eta_totex, overall exergie efficiency
+    %   -eta(5) : eta_gen, Steam generator energy efficiency
+    %   -eta(6) : eta_gex, Steam generator exergy efficiency
+    %   -eta(7) : eta_combex, Combustion exergy efficiency
+    %   -eta(8) : eta_chemex, Chimney exergy efficiency (losses)
+    %   -eta(9) : eta_transex, Heat exchanger overall exergy efficiency
+    
     %  ex_mT    exergie du travail moteur de la turbine [kJ/kg]
     %  W_mT     Travail moteur de la turbine
     %  Q_I      Action calorifique a la chaudiere [kJ/kg]
-    %  ex_I     delta d' Exergie�a la chaudiere [kJ/kg]
+    %  ex_I     delta d' Exergie a la chaudiere [kJ/kg]
     ex_mT = 0;
     if reheat == 0
         W_mT = h_30-h_60;
@@ -758,37 +770,62 @@ X_tot = sum(XMASSFLOW);
         m_comb = m_vap*Q_I/(rend_boiler*LHV);%debit combustible
         m_fum = m_comb * (1+lambda*ma1);
 
-        %%Rendement energetique du cycle
+        %%Rendement ÃƒÂ©nergÃƒÂ©tique du cycle
         rend_cyclen = (W_mT - W_mP)/Q_I;
         rend_toten = rend_boiler*eta_mec*rend_cyclen;
         %% pertes et puissances
-        Pu_tot = m_comb*LHV*10^3;                             % Puissance Totale
-        Per_boiler = Pu_tot*(1-rend_boiler);                  % pertes a la chaudiere
-        Pu_turb = P_e/eta_SiT_HP;                             % Puissance a la turbine
-        Per_meca = Pu_turb*10^3*(1-eta_mec) + W_mP;           % pertes mecanique
-        Per_cond =  Pu_tot - P_e*10^3 - Per_boiler - Per_meca;% pertes au condenseur
+        % Pu_tot 	Puissance Totale
+        % Per_boiler 	pertes a  la chaudiÃƒÂ¨re
+        % Pu_turb    Puissance a  la turbine
+        % Pe_meca 	pertes mecanique
+        % Pe_cond    pertes au condenseur
+        Pu_tot = m_comb*LHV*10^3;
+        Per_boiler = Pu_tot*(1-rend_boiler);
+        Pu_turb = P_e/eta_SiT_HP;
+        Per_meca = Pu_turb*10^3*(1-eta_mec) + W_mP;
+        Per_cond =  Pu_tot - P_e*10^3 - Per_boiler - Per_meca;
         
         %% Rendement exergetique du cycle
-        P_totex = m_comb*e_c*10^3;                       % Flux exergetique total
-        rend_totex = P_e*10^3/P_totex;                   % rendement exergetique total
-        rend_gex = m_vap*ex_I*10^3/(m_comb*e_c*10^3);    % rendement exergetique du generateur
+        P_totex = m_comb*e_c*10^3;                        % Flux exergetique total
+        rend_totex = P_e*10^3/P_totex;                    % rendement exergetique total
+        rend_gex = m_vap*ex_I*10^3/(m_comb*e_c*10^3);     % rendement exergetique du generateur
         %unite combex?
-        rend_combex =( m_fum*((e_f*10^3)-e_r))/(P_totex);% rendement exergetique de la combustion
-        rend_chemex = (e_f-e_exh)/(e_f-e_r);             % rendement exergetique de la cheminee; P.65
-        rend_transex = (m_vap*ex_I)/(m_fum*(e_f-e_exh)); % rendement exergetique du transfert de chaleur; P.65
-        rend_rotex = (W_mT-W_mP)/(ex_mT-ex_mP);          % rendement exergetique de la turbine; P.65
-        rend_cyclex = rend_rotex*(ex_mT-ex_mP)/ex_I;     % rendement exergetique du cycle; P.65
+        rend_combex =( m_fum*((e_f*10^3)-e_r))/(P_totex); % rendement exergetique de la combustion
+        rend_chemex = (e_f-e_exh)/(e_f-e_r);              % rendement exergetique de la cheminee; P.65
+        rend_transex = (m_vap*ex_I)/(m_fum*(e_f-e_exh));  % rendement exergetique du transfert de chaleur; P.65
+        rend_rotex = (W_mT-W_mP)/(ex_mT-ex_mP);           % rendement exergetique de la turbine; P.65
+        rend_cyclex = rend_rotex*(ex_mT-ex_mP)/ex_I;      % rendement exergetique du cycle; P.65
         
         %% Pertes exergetiques
+        % perteex_pompe   % pertes exergetiques du aux  pompes
+        % perteex_comb    % pertes exergetiques du a la combustion
+        % perteex_chimn   % pertes exergetiques du a la cheminee
+        % pertex_trans    % pertes exergetiques du au transfert de chaleur
         perte_turbex = P_e*10^3/eta_SiT_HP*(1/rend_rotex-1);          % pertes exergetiques du aux  pompes
         perte_combex = P_totex*(1-rend_combex);                       % pertes exergetiques du a la combustion
         perte_transex = (m_fum*(e_f - e_exh)*10^3) - m_vap*ex_I*10^3; % pertes exergetiques du au transfert de chaleur
         perte_condex = 10^3*m_vap *(e_60-e_70);                       % pertes exergetiques du a la condensation
         perte_chemex = e_exh*m_fum*10^3;                              % pertes exergetiques du a la cheminee
-        % pertes exergetiques totales
-        perte_totex = perte_turbex + perte_combex + perte_transex + perte_condex + perte_chemex +Per_meca; 
-         
-        %% Remplissage des vecteurs
+        perte_totex = perte_turbex + perte_combex + perte_transex + perte_condex + perte_chemex +Per_meca; % perte
+        %perte_chemex = P_totex-perte_turbex-perte_combex-perte_transex-perte_condex-Per_meca-P_e*10^3;
+        %if n_bache_sout>0
+        %perteEx_cond = abs((( sum(X(1:n_bache_sout))*data(140).e+data(60).e) -data(70).e)-(( sum(X(1:n_bache_sout))*data(140).h+data(60).h) -data(70).h)) ;
+        %  else
+        %  perteEx_cond =( (data(70).e -data(60).e)-(data(70).h -data(60).h));
+        %end
+        % perteEx_pompe = ((data(20).h - data(10).h) - data(20).e-data(10).e);
+        %if n_sout> 0
+        %   perteEx_pompe = ( perteEx_pompe+(data(80).h - data(70).h) - (data(80).e-data(70).e ));
+        %  if n_bache_sout>0
+        %     perte_pompex = perte_pompex + ((data(90+n_bache_sout).h-data(70+n_bache_sout).h)-(data(90+n_bache_sout).e-data(70+n_bache_sout).e));
+        %end
+        % end
+        %       perte_pompex = abs(perte_pompex)*1000;
+        %      perte_condex = perte_condex *1000;
+        %
+        %           perte_transex = P_totex - P_eff - perte_combex - perte_chemex - perte_turbex - perte_condex - Per_meca;% m_f*(ex_f - ex_exh) - m_vap*ex_I;
+        
+        %%%%%% Remplissage des vecteurs %%%%%
         ETA(1) = rend_cyclen;
         ETA(2)= rend_toten;
         ETA(3) = rend_cyclex;
