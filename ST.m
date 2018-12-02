@@ -163,7 +163,7 @@ if isfield(options,'comb')
     if isfield(options.comb,'Tmax')
         Tmax = options.comb.Tmax;
     else
-        Tmax = 1900;  % [C] A MODIFIER
+        Tmax = 1200;  % [C] A MODIFIER
     end
     if isfield(options.comb,'lambda')
         lambda = options.comb.lambda;
@@ -417,6 +417,7 @@ elseif nsout>0
     %preallocation
     T7 = zeros(1,length(T6));
     h7 = zeros(1,length(T6));
+    s7 = zeros(1,length(T6));
     % les temperature de condensation sont les temp de sortie des echangeurs
     flag = 0;
     p_degaz = 0;
@@ -430,8 +431,8 @@ elseif nsout>0
             flag = 1;
             d = i ; % endroit du degazificateur
         end
-        %h7(i) = XSteam('h_pT',p7(i),T7(i));
         h7(i) = XSteam('hL_p',p7(i));
+        s7(i) = XSteam('sL_p',p7(i));
     end
     
     %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
@@ -443,6 +444,9 @@ elseif nsout>0
     T_80=XSteam('T_ph',p_80,h_80);
     x_80=XSteam('x_ph',p_80,h_80);
     e_80=exergie(h_80,s_80);
+    
+    %%%%%%%%% Calcul etat 90 %%%%%%%%%%
+    %h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) )); %%%% A MODIFIER
     
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
     T_10 = T7(length(T7)-1)-TpinchEx;
@@ -466,8 +470,8 @@ elseif nsout>0
     p9 = zeros(1,nsout);
     s9 = zeros(1,nsout);
     e9 = zeros(1,nsout);
-    
-    T9 = T7+TpinchEx; %si on considere des echangeurs parfaits
+    h9 = zeros(1,nsout);
+    T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
     for i = 1:nsout
         if i<d
             p9(i) = p_degaz;
@@ -502,11 +506,19 @@ elseif nsout>0
     B = zeros(nsout,1);
     %remplissage de la matrice A et B
     %premiere ligne particuliere
-    A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h_80 - h_100 + h7(1) );
+%     A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h_80 - h_100 + h7(1) );
+%     A(1,1) = A(1,1) - ( h7(1) -h6(1) );
+%     A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
+%     
+%     B(1) = h9(1)-h_80-h_100+h7(1);
+%     
+    %TEST sans subcooler
+    A(1,1:d-1) = ( h9(1) - h_80);
     A(1,1) = A(1,1) - ( h7(1) -h6(1) );
     A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
     
-    B(1) = h9(1)-h_80-h_100+h7(1);
+    B(1) = h9(1)-h_80;
+    
     for i=2:nsout % i les lignes de la matrice
         if i < nsout
             deltaH7  = h7(i) - h7(i+1);
@@ -535,7 +547,9 @@ elseif nsout>0
     %Ax=B
     B(d) = h7(d) - h9(d-1);
     % Resolution
-    XMASSFLOW = A\B;
+    
+    X = A\B; %fractions soutiree
+    XMASSFLOW = X;
     
     %%%%%%%%% Calcul etat 90 %%%%%%%%%%
     h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) ));
@@ -557,11 +571,11 @@ elseif reheat == 1
     DAT(:,7) = [T_50 p_50 h_50 s_50 e_50 x_50]';
     DAT(:,8) = [T_60 p_60 h_60 s_60 e_60 x_60]';
     if nsout > 1 % car si nsout = 1 => etat 4 = eta 61
-        DAT(:,9:8+noust) = [T6;p6;h6;s6;e6;x6];
-        DAT(:,9+noust) = [T_70 p_70 h_70 s_70 e_70 x_70]';
-        DAT(:,10+nsout) = [T_80 p_80 h_80 s_80 e_80 x_80]';
-        DAT(:,11+nsout) = [T_90 p_90 h_90 s_90 e_90 x_90]';
-        DAT(:,12+noust:11+2*nsout) = [T9;p9;h9;s9;e9;x9];
+%         DAT(:,9:8+noust) = [T6;p6;h6;s6;e6;x6];
+%         DAT(:,9+noust) = [T_70 p_70 h_70 s_70 e_70 x_70]';
+%         DAT(:,10+nsout) = [T_80 p_80 h_80 s_80 e_80 x_80]';
+%         DAT(:,11+nsout) = [T_90 p_90 h_90 s_90 e_90 x_90]';
+%         DAT(:,12+noust:11+2*nsout) = [T9;p9;h9;s9;e9;x9];
     end  
 end
 %% Combustion
@@ -624,12 +638,11 @@ X_tot = sum(XMASSFLOW);
         
         if x == 0 && y == 4 % CH4 + 2*lambda*(O2+3.76N2) => 2*(lambda-1)*O2 + CO2 + 2*H2O + 2*lambda*3.76*N2
             LHV = 5.020625*10^4 ; % kJ/kg
-            PCI_comb = 8.033*10^5; %J/mole
+            PCI_comb = 8.033*10^5; % J/mole
             e_c = 52215; %kJ/kg fuel exergy. tableau pg 25 du livre
             MmComb = 16 ; %(kg/kmol)
             Cp_comb = 1000*35.8/MmComb; %J/(kg_comb*K)
             % Fractions massiques des reactifs (kg/kg_comb)
-            Comb_R = 1;
             O2_R = 2*lambda*32/MmComb;
             N2_R = 2*lambda*3.76*28/MmComb;
             % Fractions massiques des produits (kg/kg_comb)
@@ -644,7 +657,6 @@ X_tot = sum(XMASSFLOW);
             Cp_comb = 1000*10.4/MmComb; %[J/kg_comb*K]
             e_c = 32400; %[kJ/kg]
             % Fractions massiques des reactifs [kg/kg_comb]
-            Comb_R = 1;
             O2_R = lambda*32/MmComb;
             N2_R = lambda*3.76*28/MmComb;
             % Fractions massiques des produits [kg/kg_comb]
@@ -660,7 +672,6 @@ X_tot = sum(XMASSFLOW);
             CpComb = 1000*70.9/MmComb; %[J/kg_comb*K]
             e_c = 49045; %[kJ/kg]
             % Fractions massiques des reactifs (kg/kg_comb)
-            Comb_R = 1;
             O2_R = 5*lambda*32/MmComb;
             N2_R = 5*lambda*3.76*28/MmComb;
             
@@ -831,13 +842,13 @@ X_tot = sum(XMASSFLOW);
             if nsout == 0
                 FIG = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others); 
             else
-                FIG = plot_nsout(DAT,eta_SiT_HP,eta_SiT_others);
+                %FIG = plot_nsout(DAT,eta_SiT_HP,eta_SiT_others);
             end
         elseif reheat == 1
             if nsout == 0
-                FIG = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
+                %FIG = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
             else
-                FIG = plot_nsout_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
+               % FIG = plot_nsout_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
             end
         end
     end
