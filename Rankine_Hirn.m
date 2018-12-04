@@ -10,7 +10,7 @@ optionsST.p3_hp = 40;    %  [bar] : Maximum pressure
 optionsST.eta_mec = 0.98; %   [-] : mecanic efficiency of shafts bearings
 %is a structure containing combustion data :
 optionsST.comb.Tmax = 1900;  % [°C] : maximum combustion temperature  
-optionsST.comb.lambda = 1.05;% [-] : air excess
+optionsST.comb.lambda = 1.17;% [-] : air excess
 optionsST.comb.x = 0;        % [-] : the ratio O_x/C. Example 0.05 in CH_1.2O_0.05
 optionsST.comb.y = 4;        % [-] : the ratio H_y/C. Example 1.2 in CH_1.2O_0.05
 optionsST.T_exhaust = 120;   % [°C] : Temperature of exhaust gas out of the chimney
