@@ -161,22 +161,29 @@ combustion(5) = fum;
 FIG = 0; %A MODIFIER
 
 %%%%% Calcul des états %%%%%%
-
- %calcul point 1 : air atmosphérique
+R_air = 287.1; %J/kg.K 
+% %calcul point 1 : air atmosphérique
 
 p_1 = 1,01325 ; %bar
 T_1 = T_ext ;
-Cp_air_27 = 1000*(0.79*mean(janaf('c','N2',300))+0.21*mean(janaf('c','O2',300))) ; %J/kg*K
+Cp_air_27 = 1000*(0.79*janaf('c','N2',300)+0.21*janaf('c','O2',300)) ; %J/kg*K
 h_1 = T_ext * Cp_air_27 ;
 s_1 = Cp_air_27*log((T_ext+273.15)/273.15); %J/kg*K
 e_1 = 0; % point de reference
 
-%calcul point 2 : apres la pompe
+%%calcul point 2 : apres la pompe
 
 p_2 = r*p_1 ;
-T_2 = 
+T_2 =  transf_poly('compression',T_ext,r,eta_PiC,R_air,0); %renvoie T en sortie de compresseur en C, pas besoin des compo fumee pour 1 compr
+Cp_2 = 1000*(0.79*janaf('c','N2',T_2)+0.21*janaf('c','O2',T_2) ; %J/kg*K faire cp moyen entre T1 et T2 ?
+h_2 = h_1 + Cp_2*(T_2-T_1);
+s_2 = s_1 + ((1-eta_PiC)*Cp_2*log((T_2+273.15)/(T_1+273.15)); %eq 3.15
+e_2 = (h_2-h_1) - 273.15*(s_2-s_1);
 
+%%calcul point 3 : après la combustion
 
+T_3 = T_3 ; % really ?
+p_3 = p_2*k_cc; %pertes de charges dans chambre combustion
 
 
 end
