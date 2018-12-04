@@ -716,7 +716,6 @@ Cp_air_2 =0.79*janaf('c','N2',TK_janaf)+0.21*janaf('c','O2',TK_janaf);
 e_r = 0.04; %Pris a l'etat de reference
 
 %%Rendement du boiler
-ma1 = 17.2;
 p_chem = ((((lambda*ma1)+1)*CpMoy_exh*TK_exh)-(lambda*ma1*Cp_air*TK_janaf))/LHV;
 p_wall = 0.01;
 rend_boiler = 1 - p_wall - p_chem
