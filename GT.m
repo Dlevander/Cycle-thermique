@@ -10,12 +10,12 @@ function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION] = GT(P_e,options,display)
 % P_E = electrical power output target [kW]
 % OPTIONS is a structure containing :
 %   -options.k_mec [-] : Shaft losses 
-%   -options.T_0   [캜] : Reference temperature
-%   -options.T_ext [캜] : External temperature
+%   -options.T_0   [째C] : Reference temperature
+%   -options.T_ext [째C] : External temperature
 %   -options.r     [-] : Comperssion ratio
 %   -options.k_cc  [-] : Coefficient of pressure losses due to combustion
 %                        chamber
-%   -options.T_3   [캜] : Temperature after combustion (before turbine)
+%   -options.T_3   [째C] : Temperature after combustion (before turbine)
 %   -option.eta_PiC[-] : Intern polytropic efficiency (Rendement
 %                        polytropique interne) for compression
 %   -option.eta_PiT[-] : Intern polytropic efficiency (Rendement
@@ -41,7 +41,7 @@ function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION] = GT(P_e,options,display)
 %   -datex(3) : perte_combex [kW]
 %   -datex(4) : perte_echex  [kW]
 % DAT is a matrix containing :
-% dat = {T_1       , T_2       , T_3       , T_4; [캜]
+% dat = {T_1       , T_2       , T_3       , T_4; [째C]
 %        p_1       , p_2       , p_3       , p_4; [bar]
 %        h_1       , h_2       , h_3       , h_4; [kJ/kg]
 %        s_1       , s_2       , s_3       , s_4; [kJ/kg/K]
@@ -94,7 +94,72 @@ end
 if isfield(options,'T_0')
     T_0 = options.T_0;
 else
-    T_0 = 288.15;   
+    T_0 = 15;%C   
 end
+
+if isfield(options,'k_mec')
+    k_mec = options.k_mec;
+else
+    k_mec = 0.98;   
+end
+
+if isfield(options,'T_ext')
+    T_ext = options.T_ext;
+else
+    T_ext = 15;   %C
+end
+
+if isfield(options,'r')
+    r = options.r;
+else
+    r = 10;   
+end
+
+if isfield(options,'k_cc')
+    k_cc = options.k_cc;
+else
+    k_cc = 0.95;   
+end
+
+
+if isfield(options,'T_3')
+    T_3 = options.T_3;
+else
+    T_3 = 1050;   %C
+end
+
+
+if isfield(options,'eta_PiC')
+    eta_PiC = options.eta_PiC;
+else
+    eta_PiC = 0.9;   
+end
+
+if isfield(options,'eta_PiT')
+    eta_PiT = options.eta_PiT;
+else
+    eta_PiT = 0.9;   
+end
+
+
+%%%%%%%%%%%%%%% OUTPUT %%%%%%%%%%%%%%%%%%%
+ETA = zeros(6,1);
+
+XMASSFLOW = zeros(nsout,1);
+
+DATEN = zeros(2,1);
+
+DATEX = zeros(4,1);
+
+DAT= zeros(5,4);
+
+MASSFLOW = zeros(3,1); %A MODIFIER
+COMBUSTION = zeros(5,1); %A MODIFIER
+fum = zeros(4,1);
+combustion(5) = fum;
+
+FIG = 0; %A MODIFIER
+
+
 
 end
