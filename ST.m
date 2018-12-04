@@ -12,24 +12,24 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 % OPTIONS is a structure containing :
 %   -options.nsout     [-] : Number of feed-heating
 %   -options.reheat    [-] : Number of reheating
-%   -options.T_max     [Â°C] : Maximum steam temperature
-%   -options.T_cond_out[Â°C] : Condenseur cold outlet temperature
+%   -options.T_max     [Ã‚Â°C] : Maximum steam temperature
+%   -options.T_cond_out[Ã‚Â°C] : Condenseur cold outlet temperature
 %   -options.p3_hp     [bar] : Maximum pressure
 %   -options.drumFlag  [-] : if =1 then drum if =0 => no drum.
 %   -options.eta_mec   [-] : mecanic efficiency of shafts bearings
 %   -options.comb is a structure containing combustion data :
-%       -comb.Tmax     [Â°C] : maximum combustion temperature
+%       -comb.Tmax     [Ã‚Â°C] : maximum combustion temperature
 %       -comb.lambda   [-] : air excess
 %       -comb.x        [-] : the ratio O_x/C. Example 0.05 in CH_1.2O_0.05
 %       -comb.y        [-] : the ratio H_y/C. Example 1.2 in CH_1.2O_0.05
-%   -options.T_exhaust [Â°C] : Temperature of exhaust gas out of the chimney
+%   -options.T_exhaust [Ã‚Â°C] : Temperature of exhaust gas out of the chimney
 %   -options.p_3       [] : High pressure after last reheating
 %   -options.x4        [-] : Vapor ratio [gaseous/liquid] (in french : titre)
-%   -options.T_0       [Â°C] : Reference temperature
-%   -options.TpinchSub [Â°C] : Temperature pinch at the subcooler
-%   -options.TpinchEx  [Â°C] : Temperature pinch at a heat exchanger
-%   -options.TpinchCond[Â°C] : Temperature pinch at condenser
-%   -options.Tdrum     [Â°C] : minimal drum temperature
+%   -options.T_0       [Ã‚Â°C] : Reference temperature
+%   -options.TpinchSub [Ã‚Â°C] : Temperature pinch at the subcooler
+%   -options.TpinchEx  [Ã‚Â°C] : Temperature pinch at a heat exchanger
+%   -options.TpinchCond[Ã‚Â°C] : Temperature pinch at condenser
+%   -options.Tdrum     [Ã‚Â°C] : minimal drum temperature
 %   -option.eta_SiC    [-] : Isotrenpic efficiency for compression
 %   -option.eta_SiT    [-] : Isotrenpic efficiency for Turbine. It can be a vector of 2 values :
 %             	             eta_SiT(1)=eta_SiT_HP,eta_SiT(2)=eta_SiT_others
@@ -64,7 +64,7 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 %   -datex(6) : perte_chemex [kW]
 %   -datex(7) : perte_transex[kW]
 % DAT is a matrix containing :
-% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [Ã‚Â°C]
+% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [Ãƒâ€šÃ‚Â°C]
 %        p_1       , p_2       , ...       , p_6_I,     p_6_II, ... ;  [bar]
 %        h_1       , h_2       , ...       , h_6_I,     h_6_II, ... ;  [kJ/kg]
 %        s_1       , s_2       , ...       , s_6_I,     s_6_II, ... ;  [kJ/kg/K]
@@ -232,7 +232,7 @@ end
 if isfield(options,'Tdrum')
     Tdrum = options.Tdrum;
 else
-    Tdrum = 120.0;  % [°C]
+    Tdrum = 120.0;  % [Â°C]
 end
 
 if isfield(options,'eta_SiC')
@@ -422,7 +422,7 @@ elseif nsout>0
     d = 0;
     for i=1:length(p7)
         T7(i) = XSteam('Tsat_p',p7(i));
-        if T7(i) >= Tdrum && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Ã‚Â°C
+        if T7(i) >= Tdrum && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Ãƒâ€šÃ‚Â°C
             % calcul de la pression dans le degazificateur
             T_degaz = T7(i);
             p_degaz = p7(i); %temperature avant la pompe pb
@@ -571,7 +571,7 @@ X_tot = sum(XMASSFLOW);
 %  ex_mT    exergie du travail moteur de la turbine [kJ/kg]
 %  W_mT     Travail moteur de la turbine
 %  Q_I      Action calorifique a la chaudiere [kJ/kg]
-%  ex_I     delta d' Exergie�a la chaudiere [kJ/kg]
+%  ex_I     delta d' Exergie a la chaudiere [kJ/kg]
 ex_mT = 0;
 if reheat == 0
     W_mT = h_30-h_60;
@@ -673,7 +673,7 @@ elseif x == 0 && y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1
     x_N2 = 5*lambda*3.76*28/MmComb;
     
 end
-%on change les fractions massiques de (kg/kg_comb) ÃƒÂ  (kg/kg_fum)
+%on change les fractions massiques de (kg/kg_comb) ÃƒÆ’Ã‚Â  (kg/kg_fum)
 Sum = x_O2 + x_CO2 + x_H2O + x_N2 ;
 x_O2 = x_O2/Sum;
 x_CO2 = x_CO2/Sum;
@@ -684,8 +684,18 @@ combustion.LHV = LHV;
 combustion.e_c = e_c;
 combustion.lambda = lambda;
 
+%Enthalpie de l'air a  T_0
+%h_air = 0.79*janaf('h','N2',T_janaf+273.15) + 0.21*janaf('h','O2',T_janaf+273.15);
+Cp_air = 1000*(0.79*mean(janaf('c','N2',300)))+0.21*mean(janaf('c','O2',300));
+h_air = Cp_air * T_0;
+
 %%Calcul Cp moyen des fumees
 T_exh = T_exhaust;%T en sortie de cheminee
+if isfield(options.comb,'Tmax')
+    Tmax = options.comb.Tmax;
+else
+    Tmax = TempComb(LHV, lambda, ma1, h_air, x_O2 , x_CO2 , x_H2O , x_N2);  % fct qui calcule t fumee apres comb
+end
 T_f = Tmax; %T fumees juste en sortie de combustion
 TK_exh = T_exh+273.15;
 TK_f = T_f+273.15;
@@ -711,11 +721,7 @@ CpMoyCO2_comb = janaf('c','CO2',T_janaf+273);
 CpMoyN2_comb = janaf('c','N2',T_janaf+273);
 CpMoyH2O_comb = janaf('c','H2O',T_janaf+273);
 CpMoy_comb_g = x_H2O*CpMoyH2O_comb + x_CO2*CpMoyCO2_comb + x_O2*CpMoyO2_comb+ x_N2*CpMoyN2_comb;
-%%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
-%Enthalpie de l'air à T_0
-%         h_air = 0.79*janaf('h','N2',T_janaf+273.15) + 0.21*janaf('h','O2',T_janaf+273.15);
-Cp_air = 1000*(0.79*mean(janaf('c','N2',300)))+0.21*mean(janaf('c','O2',300));
-h_air = Cp_air * T_0;
+%%Calcul des enthalpies, entropies et exergies des fumees
 
 %         % Enthalpie et entropie des fumees avant la combustion
 hRef = CpMoy_comb_g* T_0;
