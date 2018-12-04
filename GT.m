@@ -160,6 +160,23 @@ combustion(5) = fum;
 
 FIG = 0; %A MODIFIER
 
+%%%%% Calcul des états %%%%%%
+
+ %calcul point 1 : air atmosphérique
+
+p_1 = 1,01325 ; %bar
+T_1 = T_ext ;
+Cp_air_27 = 1000*(0.79*mean(janaf('c','N2',300))+0.21*mean(janaf('c','O2',300))) ; %J/kg*K
+h_1 = T_ext * Cp_air_27 ;
+s_1 = Cp_air_27*log((T_ext+273.15)/273.15); %J/kg*K
+e_1 = 0; % point de reference
+
+%calcul point 2 : apres la pompe
+
+p_2 = r*p_1 ;
+T_2 = 
+
+
 
 
 end
