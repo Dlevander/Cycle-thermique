@@ -612,9 +612,7 @@ ma1 = (32+3.76*28.15)*(1+(y/4))/(12.01+1.008*y); % pouvoir comburivore [kg_air_s
 
 %%Calcul Cp moyen des fumees
 T_exh = T_exhaust;%T en sortie de cheminee
-T_f = Tmax; %T fumees juste en sortie de combustion
 TK_exh = T_exh+273.15;
-TK_f = T_f+273.15;
 TK_0 = T_0+273.15; % temperature de reference
 if TK_0 < 300
     TK_janaf = 300; %janaf ne commence qua partir de 27 deg celsius
@@ -622,6 +620,22 @@ else
     TK_janaf = TK_0;
 end
 
+%%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
+%Enthalpie de l'air a T_0
+x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
+x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
+
+Cp_air =x_a_N2*janaf('c','N2',TK_exh)+x_a_O2*janaf('c','O2',TK_exh);% [kj/kg*K]
+h_air = Cp_air*TK_0;
+
+if isfield(options.comb,'Tmax')
+    Tmax = options.comb.Tmax;
+else
+    Tmax = TempComb(LHV, lambda, ma1, h_air, x_O2 , x_CO2 , x_H2O , x_N2);  % fct qui calcule t fumee apres comb
+end
+
+T_f = Tmax; %T fumees juste en sortie de combustion
+TK_f = T_f+273.15;
 
 Cp_f = CP(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_f,100)); %[kj/kg/K]
 CpMoy_f = CPmoy(x_O2, x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_f,100)); %[kj/kg/K]
@@ -635,13 +649,6 @@ CpMoy_exh = CPmoy(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100)); % [kj/kg
 delta_h_exh = Cp_exh*(TK_exh-TK_0); % [kj/kg]
 delta_S_exh = CpMoy_exh*log(TK_exh/TK_0); % [kj/kg/K]
 e_exh = delta_h_exh-TK_0*delta_S_exh; % [kj/kg]
-
-%%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
-%Enthalpie de l'air a T_0
-x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
-x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
-
-Cp_air =x_a_N2*janaf('c','N2',TK_exh)+x_a_O2*janaf('c','O2',TK_exh);% [kj/kg*K]
 
 % Enthalpie, entropie et exergie du melange fuel+air p32
 e_r = 0.04;%[kj/kg] %Pris a l'etat de reference
