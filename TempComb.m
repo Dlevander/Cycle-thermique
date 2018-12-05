@@ -1,5 +1,5 @@
 function [T_f] = TempComb(LHV, lambda, ma1, h_air, x_O2 , x_CO2 , x_H2O , x_N2)
-T_f_init = 1000 ; %pour commencer l'itération
+T_f_init = 1000 ; %pour commencer l'itÃ©ration
 delta= 10;
 n=0;
 epsilon = 0.5;
@@ -20,3 +20,4 @@ while (delta>1 && n<50)
     n=n+1;
 end
 T_f = T_f_init;
+end
