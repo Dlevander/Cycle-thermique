@@ -1,4 +1,9 @@
-function [x_N2 x_O2 x_CO2 x_H2O lambda ma1 LHV e_c] = combustion(x,y,T2,T3);
+function [x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T2,T3);
+
+Mm_O2 = 32*1e-3; %kg/mol
+Mm_CO2 = 44*1e-3;
+Mm_H2O = 18*1e-3;
+Mm_N2 = 28*1e-3;
 
 lambda = 1.05 ; % A MODIFIER !!!
 
@@ -60,4 +65,6 @@ x_CO2 = x_CO2/Sum;
 x_N2 = x_N2/Sum;
 x_H2O = x_H2O/Sum;
 ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb]
+Mm_fum = x_O2*Mm_O2 + x_CO2*Mm_CO2 + x_N2*Mm_N2 + x_H2O*Mm_H2O;
+R_fum = 8.314/Mm_fum;
 end
