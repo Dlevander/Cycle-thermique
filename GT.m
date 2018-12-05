@@ -10,12 +10,12 @@ function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION] = GT(P_e,options,display)
 % P_E = electrical power output target [kW]
 % OPTIONS is a structure containing :
 %   -options.k_mec [-] : Shaft losses 
-%   -options.T_0   [°C] : Reference temperature
-%   -options.T_ext [°C] : External temperature
+%   -options.T_0   [Â°C] : Reference temperature
+%   -options.T_ext [Â°C] : External temperature
 %   -options.r     [-] : Comperssion ratio
 %   -options.k_cc  [-] : Coefficient of pressure losses due to combustion
 %                        chamber
-%   -options.T_3   [°C] : Temperature after combustion (before turbine)
+%   -options.T_3   [Â°C] : Temperature after combustion (before turbine)
 %   -option.eta_PiC[-] : Intern polytropic efficiency (Rendement
 %                        polytropique interne) for compression
 %   -option.eta_PiT[-] : Intern polytropic efficiency (Rendement
@@ -41,7 +41,7 @@ function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION] = GT(P_e,options,display)
 %   -datex(3) : perte_combex [kW]
 %   -datex(4) : perte_echex  [kW]
 % DAT is a matrix containing :
-% dat = {T_1       , T_2       , T_3       , T_4; [°C]
+% dat = {T_1       , T_2       , T_3       , T_4; [Â°C]
 %        p_1       , p_2       , p_3       , p_4; [bar]
 %        h_1       , h_2       , h_3       , h_4; [kJ/kg]
 %        s_1       , s_2       , s_3       , s_4; [kJ/kg/K]
@@ -94,7 +94,113 @@ end
 if isfield(options,'T_0')
     T_0 = options.T_0;
 else
-    T_0 = 288.15;   
+    T_0 = 15;%C   
 end
+
+if isfield(options,'k_mec')
+    k_mec = options.k_mec;
+else
+    k_mec = 0.98;   
+end
+
+if isfield(options,'T_ext')
+    T_ext = options.T_ext;
+else
+    T_ext = 15;   %C
+end
+
+if isfield(options,'r')
+    r = options.r;
+else
+    r = 10;   
+end
+
+if isfield(options,'k_cc')
+    k_cc = options.k_cc;
+else
+    k_cc = 0.95;   
+end
+
+
+if isfield(options,'T_3')
+    T_3 = options.T_3;
+else
+    T_3 = 1050;   %C
+end
+
+
+if isfield(options,'eta_PiC')
+    eta_PiC = options.eta_PiC;
+else
+    eta_PiC = 0.9;   
+end
+
+if isfield(options,'eta_PiT')
+    eta_PiT = options.eta_PiT;
+else
+    eta_PiT = 0.9;   
+end
+
+
+%%%%%%%%%%%%%%% OUTPUT %%%%%%%%%%%%%%%%%%%
+ETA = zeros(6,1);
+
+XMASSFLOW = zeros(nsout,1);
+
+DATEN = zeros(2,1);
+
+DATEX = zeros(4,1);
+
+DAT= zeros(5,4);
+
+MASSFLOW = zeros(3,1); %A MODIFIER
+COMBUSTION = zeros(5,1); %A MODIFIER
+fum = zeros(4,1);
+combustion(5) = fum;
+
+FIG = 0; %A MODIFIER
+
+%%%%% Calcul des Ã©tats %%%%%%
+R_air = 287.1; %J/kg.K 
+% %calcul point 1 : air atmosphÃ©rique
+
+p_1 = 1,01325 ; %bar
+T_1 = T_ext ;
+Cp_air_27 = 1000*(0.79*janaf('c','N2',300)+0.21*janaf('c','O2',300)) ; %J/kg*K
+h_1 = T_ext * Cp_air_27 ;
+s_1 = Cp_air_27*log((T_ext+273.15)/273.15); %J/kg*K
+e_1 = 0; % point de reference
+
+%%calcul point 2 : apres la pompe
+
+p_2 = r*p_1 ;
+T_2 = transf_poly('compression',T_ext,r,eta_PiC,R_air,0); %renvoie T en sortie de compresseur en C, pas besoin des compo fumee pour 1 compr
+Cp_12 = 1000*(0.79*mean(janaf('c','N2',linspace(T_1+273,T_2+273,50)))+0.21*mean(janaf('c','O2',linspace(T_1+273,T_2+273,50)))) ; %J/kg*K faire cp moyen entre T1 et T2 ?
+h_2 = h_1 + Cp_12*(T_2-T_1);
+s_2 = s_1 + ((1-eta_PiC)*Cp_2*log((T_2+273.15)/(T_1+273.15)); %eq 3.15
+e_2 = (h_2-h_1) - 273.15*(s_2-s_1);
+
+%%calcul point 3 : aprÃ¨s la combustion
+
+T_3 = T_3 ; % really ?
+p_3 = p_2*k_cc; %pertes de charges dans chambre combustion
+
+[x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T2,T3);
+Cp_23 =(x_N2*mean*(janaf('c','N2',linspace(T_2+273,T_3+273,50))) + x_O2*mean*(janaf('c',O2',linspace(T_2+273,T_3+273,50))) + x_CO2*mean*(janaf('c','CO2',linspace(T_2+273,T_3+273,50))) + x_H2O*mean*(janaf('c',H2O',linspace(T_2+273,T_3+273,50))))*1000; %faire cp moyen entre T2 et T3 ?
+h_3 =Cp_23*(T_3-T_2) + h_2;
+s_3 = s_2+ Cp_23*log((T_3+273)/(T_2+273) - R_fum*log(p_3/p_2);
+e_3 = (h_3-h_1) - 273.15*(s_3-s_1);
+
+%%Calcul point 4 : aprs la turbine
+p_4 = p_1 ;% atm
+compo_fum = [x_CO2 x_H2O x_O2 x_N2];
+T_4 = transf_poly('detente',T_3,p_4/p_3,eta_PiT,R_fum,compo_fum);
+Cp_34 =(x_N2*mean*(janaf('c','N2',linspace(T_3+273,T_4+273,50))) + x_O2*mean*(janaf('c',O2',linspace(T_3+273,T_4+273,50))) + x_CO2*mean*(janaf('c','CO2',linspace(T_3+273,T_4+273,50))) + x_H2O*mean*(janaf('c',H2O',linspace(T_3+273,T_4+273,50))))*1000;
+h_4 = h_3 + Cp_34*(T_4-T_3);
+s_4 = s_3 + Cp_34*log((T_4+273)/(T_3+273))* ((1-eta_PiT)/(eta_PiT));
+e_4 = (h_4-h_1) - 273.15*(s_4-s_1);
+
+
+
 
 end

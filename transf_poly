@@ -1,0 +1,39 @@
+function [T2]=transf_poly(transf,T1,r,rend,Rstar,compo_fum)
+% T1 en °C
+% T2 en °C
+% type pour savoir si c'est une compression ou une detente
+% r = rapport de compression
+% rend= rendement polytropique interne
+% Rstar= 8.314/Mm
+
+T1=T1+273.15;
+T2=T1;
+T2old=0;
+n=0;
+
+if strcmp(transfo,'compression')
+    while(abs((T2-T2old))>1 && n<30)
+    T2old=T2;
+    Cp = 1000*(0.79*mean(janaf('c','N2',linspace(T1,T2old,50)))+0.21*mean(janaf('c','O2',linspace(T1,T2old,50)))) ; %J/kg*K
+    Cv=Cp-Rstar;
+    gamma=Cp/Cv;
+    T2=T1*r^((gamma-1)/(gamma*rend)); %T en kelvin p.118 eq 3.22 et 3.19
+    n=n+1;
+    end
+    
+elseif strcmp(transfo,'detente')
+    while(abs(T2-T2old)>1 && n<30)
+    T2old=T2;
+    Cp=(x_N2*mean*(janaf('c','N2',linspace(T1,T2old,50))) + x_O2*mean*(janaf('c',O2',linspace(T1,T2old,50))) + x_CO2*mean*(janaf('c','CO2',linspace(T1,T2old,50))) + x_H2O*mean*(janaf('c',H2O',linspace(T1,T2old,50))))*1000; %faire cp moyen entre T2 et T3 ?
+    Cv=Cp-Rstar;
+    gamma=Cp/Cv;
+    T2=T1*r^(rend*(gamma-1)/gamma); %r=p4/p3 = 1/(r_comp*k_cc) eq3.23 et 3.25
+    n=n+1;
+    end
+else
+    display('error')
+    return  
+end
+T2=T2-273.1; %sortie en °C
+
+end
