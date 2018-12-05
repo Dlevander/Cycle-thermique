@@ -161,7 +161,7 @@ if isfield(options,'comb')
     if isfield(options.comb,'Tmax')
         Tmax = options.comb.Tmax;
     else
-        Tmax = 1200;  % [C] A MODIFIER
+        Tmax = 1900;  % [C] A MODIFIER
     end
     if isfield(options.comb,'lambda')
         lambda = options.comb.lambda;
@@ -230,7 +230,7 @@ end
 if isfield(options,'Tdrum')
     Tdrum = options.Tdrum;
 else
-    Tdrum = 120.0;  % [Â°C]
+    Tdrum = 120.0;  % [°C]
 end
 
 if isfield(options,'eta_SiC')
@@ -322,7 +322,7 @@ if reheat == 1
     
     %%%%%%%%%%%%%%% ETAT 60 %%%%%%%%%%%%%%%
     % Sortie de la turbine BP dans cas isentropique (60s) et reel (60)
-    s_60s = s_50;
+    s_60s = s_50; 
     T_60 = T_cond_out;%-3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
     p_60 = XSteam('psat_T',T_60);
     x_60s = XSteam('x_ps',p_60,s_60s);
@@ -388,7 +388,7 @@ elseif nsout>0
     h6s = h6s_temp(2:length(h6s_temp)-1);
     s_60 = s_50;
     p6s = arrayfun( @(h) XSteam('p_hs',h,s_60),h6s);
-    
+
     p6 = p6s; %hypothese
     h6=h_50+eta_SiT_others*(h_50-h6s);
     %x_60 = x_40;
@@ -399,7 +399,7 @@ elseif nsout>0
     h6 = [h6 h_40];
     p6 = [p6 p_40];
     T6 = [T6 T_40];
-    
+
     %% Degazification
     %%%%%%%%% Calcul etat 7x %%%%%%%%%%
     p7 = p6; % on considere les vannes de detente apres les etats 7
@@ -413,7 +413,7 @@ elseif nsout>0
     d = 0;
     for i=1:length(p7)
         T7(i) = XSteam('Tsat_p',p7(i));
-        if T7(i) >= Tdrum && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Ãƒâ€šÃ‚Â°C
+        if T7(i) >= Tdrum && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Ã‚Â°C
             % calcul de la pression dans le degazificateur
             p_degaz = p7(i); %pression avant la pompe pb
             flag = 1;
@@ -432,14 +432,14 @@ elseif nsout>0
     T_80=XSteam('T_ph',p_80,h_80);
     x_80=XSteam('x_ph',p_80,h_80);
     e_80=exergie(h_80,s_80);
-    
+        
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
-    T_10 = T7(length(T7)-1)-TpinchEx;
+    T_10 = T7(length(T7))-TpinchEx;
     p_10 = p_degaz + (p_21 - p_degaz)/3; % hypothese
     h_10 = XSteam('hL_T',T_10);
     s_10 = XSteam('sL_T',T_10);
     x_10 = NaN;
-    e_10 = exergie(h_10,h_10);
+    e_10 = exergie(h_10,s_10);
     
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
     p_20 = p_21; %hypothese
@@ -485,7 +485,6 @@ elseif nsout>0
     s_110 = XSteam('s_pT',p_110,T_110);
     x_110 = XSteam('x_ph',p_110,T_110);
     e_100 = exergie(h_110,s_110);
-    
     %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
     XMASSFLOW = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
 end
@@ -532,7 +531,6 @@ if reheat == 0
     end
     ex_mT = ex_mT + e_30 - e_60;
     
-    
 elseif reheat == 1
     
     W_mT = (X_tot+1)*(h_30 - h_40) + (h_50 - h_60);
@@ -561,7 +559,7 @@ if  nsout ~= 0
         ex_mP = W_mP - T_0*(s_80-s_70 + s9(d) - s7(d) + s_20-s_10);
     end
     
-else % travail fourni aÃƒâ€šÃ‚Â  la pompe sans bache et sans soutirages
+else % travail fourni aÃ‚Â  la pompe sans bache et sans soutirages
     W_mP = (X_tot+1)*(h_20-h_10);
     ex_mP = W_mP - T_0*(s_20-s_10);
 end
@@ -623,15 +621,17 @@ else
 end
 
 %%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
-%Enthalpie de l'air a T_0
+%Enthalpie de l'air�a T_0
 x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
 x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
 
 Cp_air =x_a_N2*janaf('c','N2',TK_exh)+x_a_O2*janaf('c','O2',TK_exh);% [kj/kg*K]
 h_air = Cp_air*TK_0;
 
-if isfield(options.comb,'Tmax')
-    Tmax = options.comb.Tmax;
+if isfield(options,'comb')
+    if isfield(options.comb,'Tmax')
+        Tmax = options.comb.Tmax;
+    end
 else
     Tmax = TempComb(LHV, lambda, ma1, h_air, x_O2 , x_CO2 , x_H2O , x_N2);  % fct qui calcule t fumee apres comb
 end
@@ -670,7 +670,6 @@ rend_boiler = 1 - p_wall - p_chem;
 %                 rend_boiler = (m_vap*((X_tot+1)*(h_30-h_20)+ (X_tot+1)*(h_50-h_40)))/(m_comb*LHV*10^3);
 %             end
 %         end
-
 %m_fum = m_vap*Q_I/delta_h; %debit fumees
 m_comb = m_vap*Q_I/(rend_boiler*LHV);%debit combustible
 m_fum = m_comb * (1+lambda*ma1);
@@ -750,7 +749,8 @@ if display == 1
     if reheat == 0
         if nsout == 0
             FIG(1:2) = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others);
-            FIG(3) = pie(DATEN,'Pertes generateur de vapeur kW','Pertes mecaniques kW','Pertes Condenseur kW')
+            FIG(3)= figure;
+            pie([P_e;DATEN],{'Puissance effective' 'Pertes generateur de vapeur kW','Pertes mecaniques kW','Pertes Condenseur kW'})
         else
             %FIG = plot_nsout(DAT,eta_SiT_HP,eta_SiT_others);
         end
@@ -759,9 +759,9 @@ if display == 1
             %FIG = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
         else
             % FIG = plot_nsout_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
-            >>>>>>> f47d00f1684825fc2b4f12d446c827195242816d
         end
     end
-    
+end
+
 end
 
