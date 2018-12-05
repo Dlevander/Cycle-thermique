@@ -571,9 +571,7 @@ m_vap = P_e/(eta_mec*(W_mT-W_mP)); %page 60
 %%determination des fractions massiques des fumees
 
 if x == 0 && y == 4 % CH4 + 2*lambda*(O2+3.76N2) => 2*(lambda-1)*O2 + CO2 + 2*H2O + 2*lambda*3.76*N2
-%     LHV = 5.020625*10^4 ; % kJ/kg
-%     PCI_comb = 8.033*10^5; % J/mole
-%Livre
+    %Livre
     LHV = 50150; % [kj/kg_comb]
     e_c = 52215; %kJ/kg fuel exergy. tableau pg 25 du livre
     MmComb = 16 ; %(kg/kmol)
@@ -632,24 +630,24 @@ delta_Sf = CpMoy_f * log(TK_f/TK_0); % [kj/kg*K]
 e_f = delta_hf-TK_0*delta_Sf; % [kj/kg]
 %e_f = 1881; %kJ/kg
 
-Cp_exh = CP(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100));
-CpMoy_exh = CPmoy(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100));
+Cp_exh = CP(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100)); % [kj/kg*K]
+CpMoy_exh = CPmoy(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100)); % [kj/kg*K]
 delta_h_exh = Cp_exh*(TK_exh-TK_0); % [kj/kg]
 delta_S_exh = CpMoy_exh*log(TK_exh/TK_0); % [kj/kg/K]
 e_exh = delta_h_exh-TK_0*delta_S_exh; % [kj/kg]
 
 %%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
 %Enthalpie de l'air a T_0
-x_a_O2 = 0.21*32/28.84; %fraction massique de O2 dans l'air
-x_a_N2 = 0.79*28/28.84; %fraction massique de N2 dans l'air
+x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
+x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
 
-Cp_air =x_a_N2*janaf('c','N2',TK_exh)+x_a_O2*janaf('c','O2',TK_exh);
+Cp_air =x_a_N2*janaf('c','N2',TK_exh)+x_a_O2*janaf('c','O2',TK_exh);% [kj/kg*K]
 
 % Enthalpie, entropie et exergie du melange fuel+air p32
 e_r = 0.04;%[kj/kg] %Pris a l'etat de reference
 
 %%Rendement du boiler
-p_chem = ((((lambda*ma1)+1)*Cp_exh*TK_exh)-(lambda*ma1*Cp_air*TK_janaf))/LHV;
+p_chem = ((((lambda*ma1)+1)*Cp_exh*TK_exh)-(lambda*ma1*Cp_air*TK_0))/LHV;
 p_wall = 0.01;
 rend_boiler = 1 - p_wall - p_chem;
 %rend_boiler = 0.945;
@@ -742,7 +740,7 @@ if display == 1
     if reheat == 0
         if nsout == 0
             FIG(1:2) = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others);
-            FIG(3) = pie(DATEN,'Pertes generateur de vapeur','','')
+            FIG(3) = pie(DATEN,'Pertes generateur de vapeur kW','Pertes mecaniques kW','Pertes Condenseur kW')
         else
             %FIG = plot_nsout(DAT,eta_SiT_HP,eta_SiT_others);
         end

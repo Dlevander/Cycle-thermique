@@ -35,5 +35,5 @@ optionsST.eta_SiT = 0.89;   %[-] : Isotrenpic efficiency for Turbine. It can be 
 
 P_e = 288e3; %[kW]
 
-[ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,optionsST,1);
+[ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,optionsST,1)
 

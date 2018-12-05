@@ -744,7 +744,7 @@ e_r = 0; %Pris a letat de reference
 %%Rendement du boiler
 p_chem = ((((lambda*ma1)+1)* h_exh)-(lambda*ma1*h_air))/(LHV*10^3);
 p_wall = 0.01;
-rend_boiler = 1 - p_wall - p_chem;
+rend_boiler = 1 - p_wall - p_chem
 %rend_boiler = 0.945;
 %rend_boiler = (m_vap*(h_30-h_20))/(m_comb*LHV);
 %         if reheat ==0
