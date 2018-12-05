@@ -1,0 +1,63 @@
+function [x_N2 x_O2 x_CO2 x_H2O lambda ma1 LHV e_c] = combustion(x,y,T2,T3);
+
+lambda = 1.05 ; % A MODIFIER !!!
+
+%%determination des fractions massiques des fumees
+
+if x == 0 && y == 4 % CH4 + 2*lambda*(O2+3.76N2) => 2*(lambda-1)*O2 + CO2 + 2*H2O + 2*lambda*3.76*N2
+    LHV = 5.020625*10^4 ; % kJ/kg
+    PCI_comb = 8.033*10^5; %J/mole
+    e_c = 52215; %kJ/kg fuel exergy. tableau pg 25 du livre
+    MmComb = 16 ; %(kg/kmol)
+    Cp_comb = 1000*35.8/MmComb; %J/(kg_comb*K)
+    % Fractions massiques des reactifs (kg/kg_comb)
+    Comb_R = 1;
+    O2_R = 2*lambda*32/MmComb;
+    N2_R = 2*lambda*3.76*28/MmComb;
+    % Fractions massiques des produits (kg/kg_comb)
+    x_O2 = 2*(lambda-1)*32/MmComb;
+    x_CO2 = 44/MmComb;
+    x_H2O = 2*18/MmComb;
+    x_N2 = 2*lambda*3.76*28/MmComb;
+    
+elseif x == 0 && y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
+    LHV = 32780; % [kJ/kg]
+    MmComb = 12; %[kg/kmol]
+    Cp_comb = 1000*10.4/MmComb; %[J/kg_comb*K]
+    e_c = 32400; %[kJ/kg]
+    % Fractions massiques des reactifs [kg/kg_comb]
+    Comb_R = 1;
+    O2_R = lambda*32/MmComb;
+    N2_R = lambda*3.76*28/MmComb;
+    % Fractions massiques des produits [kg/kg_comb]
+    x_O2 = (lambda-1)*32/MmComb;
+    x_CO2 = 44/MmComb;
+    x_H2O = 0;
+    x_N2 = lambda*3.76*28/MmComb;
+    
+elseif x == 0 && y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1)*O2 + 3*CO2 + 4*H2O + 5*lambda*3.76*N2
+    
+    LHV = 46465; % [kJ/kg]
+    MmComb = 44; %[kg/kmol]
+    CpComb = 1000*70.9/MmComb; %[J/kg_comb*K]
+    e_c = 49045; %[kJ/kg]
+    % Fractions massiques des reactifs (kg/kg_comb)
+    Comb_R = 1;
+    O2_R = 5*lambda*32/MmComb;
+    N2_R = 5*lambda*3.76*28/MmComb;
+    
+    % Fractions massiques des produits (kg/kg_comb)
+    x_O2 = 5*(lambda-1)*32/MmComb;
+    x_CO2 = 3*44/MmComb;
+    x_H2O = 4*18/MmComb;
+    x_N2 = 5*lambda*3.76*28/MmComb;
+    
+end
+%on change les fractions massiques de (kg/kg_comb) ÃƒÆ’Ã‚Â  (kg/kg_fum)
+Sum = x_O2 + x_CO2 + x_H2O + x_N2 ;
+x_O2 = x_O2/Sum;
+x_CO2 = x_CO2/Sum;
+x_N2 = x_N2/Sum;
+x_H2O = x_H2O/Sum;
+ma1 = (32+3.76*28)*(1+(y/4))/(12+y); % pouvoir comburivore [kg_air_stoech/kg_comb]
+end
