@@ -434,12 +434,12 @@ elseif nsout>0
     e_80=exergie(h_80,s_80);
         
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
-    T_10 = T7(length(T7)-1)-TpinchEx;
+    T_10 = T7(length(T7))-TpinchEx;
     p_10 = p_degaz + (p_21 - p_degaz)/3; % hypothese
     h_10 = XSteam('hL_T',T_10);
     s_10 = XSteam('sL_T',T_10);
     x_10 = NaN;
-    e_10 = exergie(h_10,h_10);
+    e_10 = exergie(h_10,s_10);
     
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
     p_20 = p_21; %hypothese
@@ -628,8 +628,10 @@ x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
 Cp_air =x_a_N2*janaf('c','N2',TK_exh)+x_a_O2*janaf('c','O2',TK_exh);% [kj/kg*K]
 h_air = Cp_air*TK_0;
 
-if isfield(options.comb,'Tmax')
-    Tmax = options.comb.Tmax;
+if isfield(options,'comb')
+    if isfield(options.comb,'Tmax')
+        Tmax = options.comb.Tmax;
+    end
 else
     Tmax = TempComb(LHV, lambda, ma1, h_air, x_O2 , x_CO2 , x_H2O , x_N2);  % fct qui calcule t fumee apres comb
 end
@@ -747,7 +749,8 @@ if display == 1
     if reheat == 0
         if nsout == 0
             FIG(1:2) = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others);
-            FIG(3) = pie(DATEN,'Pertes generateur de vapeur kW','Pertes mecaniques kW','Pertes Condenseur kW')
+            FIG(3)= figure;
+            pie([P_e;DATEN],{'Puissance effective' 'Pertes generateur de vapeur kW','Pertes mecaniques kW','Pertes Condenseur kW'})
         else
             %FIG = plot_nsout(DAT,eta_SiT_HP,eta_SiT_others);
         end

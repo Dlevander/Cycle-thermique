@@ -12,8 +12,8 @@ close all
 optionsST.nsout = 8;   %  [-] : Number of feed-heating
 optionsST.reheat  = 1; %  [-] : Number of reheating
 optionsST.T_max = 525; %  [°C] : Maximum steam temperature
-optionsST.T_cond_out = 3; %  [°C] : Condenseur cold outlet temperature
-optionsST.p3_hp = 200;    %  [bar] : Maximum pressure
+optionsST.T_cond_out = 33; %  [°C] : Condenseur cold outlet temperature
+optionsST.p3_hp = 310;    %  [bar] : Maximum pressure
 %   -options.drumFlag  [-] : if =1 then drum if =0 => no drum.
 options.eta_mec = 0.98;  %[-] : mecanic efficiency of shafts bearings
 %optionsST.comb        % is a structure containing combustion data :
