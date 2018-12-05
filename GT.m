@@ -174,7 +174,7 @@ e_1 = 0; % point de reference
 %%calcul point 2 : apres la pompe
 
 p_2 = r*p_1 ;
-T_2 =  transf_poly('compression',T_ext,r,eta_PiC,R_air,0); %renvoie T en sortie de compresseur en C, pas besoin des compo fumee pour 1 compr
+T_2 = transf_poly('compression',T_ext,r,eta_PiC,R_air,0); %renvoie T en sortie de compresseur en C, pas besoin des compo fumee pour 1 compr
 Cp_2 = 1000*(0.79*janaf('c','N2',T_2)+0.21*janaf('c','O2',T_2) ; %J/kg*K faire cp moyen entre T1 et T2 ?
 h_2 = h_1 + Cp_2*(T_2-T_1);
 s_2 = s_1 + ((1-eta_PiC)*Cp_2*log((T_2+273.15)/(T_1+273.15)); %eq 3.15
@@ -184,6 +184,11 @@ e_2 = (h_2-h_1) - 273.15*(s_2-s_1);
 
 T_3 = T_3 ; % really ?
 p_3 = p_2*k_cc; %pertes de charges dans chambre combustion
+
+[x_N2 x_O2 x_CO2 x_H2O lambda ma1 LHV e_c] = combustion(x,y,T2,T3);
+Cp_3 =(x_N2*janaf('c','N2',T_3+273) + x_O2*janaf('c',O2',T_3+273) + x_CO2*janaf('c','CO2',T_3+273) + x_H2O*janaf('c',H2O',T_3+273))*1000; %faire cp moyen entre T2 et T3 ?
+h_3 =Cp_3*(T_3-T_2) + h_2;
+s_3 = s_1+ Cp_3*log((T_3+273)/(T_1+273)
 
 
 end
