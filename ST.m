@@ -64,7 +64,7 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 %   -datex(6) : perte_chemex [kW]
 %   -datex(7) : perte_transex[kW]
 % DAT is a matrix containing :
-% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [Ã‚Â°C]
+% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [C]
 %        p_1       , p_2       , ...       , p_6_I,     p_6_II, ... ;  [bar]
 %        h_1       , h_2       , ...       , h_6_I,     h_6_II, ... ;  [kJ/kg]
 %        s_1       , s_2       , ...       , s_6_I,     s_6_II, ... ;  [kJ/kg/K]
@@ -130,9 +130,7 @@ end
 if isfield(options,'T_max')
     T_max = options.T_max;
 else
-    
     T_max = 520.0;  % [C]
-    
 end
 
 if isfield(options,'T_cond_out')
@@ -146,11 +144,11 @@ if isfield(options,'p3_hp')
 else
     p3_hp = 200;  % [bar]
 end
-%presence ou non d'un tiroir pour le superheater
+%presence ou non d'une bache de degazage
 if isfield(options,'drumFlag')
     drumFlag = options.drumFlag;
 else
-    drumFlag = 1 ;  % [-] % cas de base sans degazificateur non ?
+    drumFlag = 1 ;  % [-] % cas de base avec
 end
 
 if isfield(options,'eta_mec')
@@ -163,7 +161,7 @@ if isfield(options,'comb')
     if isfield(options.comb,'Tmax')
         Tmax = options.comb.Tmax;
     else
-        Tmax = 1200;  % [C] A MODIFIER
+        Tmax = 1900;  % [C] A MODIFIER
     end
     if isfield(options.comb,'lambda')
         lambda = options.comb.lambda;
@@ -238,7 +236,7 @@ end
 if isfield(options,'eta_SiC')
     eta_SiC = options.eta_SiC;
 else
-    eta_SiC = 1;  % [-]
+    eta_SiC = 0.85;  % [-]
 end
 
 if isfield(options,'eta_SiT')
@@ -324,16 +322,16 @@ if reheat == 1
     
     %%%%%%%%%%%%%%% ETAT 60 %%%%%%%%%%%%%%%
     % Sortie de la turbine BP dans cas isentropique (60s) et reel (60)
-    s_60s = s_50;
+    s_60s = s_50; 
     T_60 = T_cond_out;%-3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
     p_60 = XSteam('psat_T',T_60);
     x_60s = XSteam('x_ps',p_60,s_60s);
     h_60s = XSteam('h_Tx',T_60,x_60s);
     
-    h_60 = h_50 - eta_SiT_others * (h_50-h_60s) ;
+    h_60 = h_50 - eta_SiT_others * (h_50-h_60s) ; %[kJ/kg]
     x_60 = XSteam('x_ph',p_60,h_60);
-    s_60 = XSteam('s_ph',p_60,h_60);
-    e_60 = exergie(h_60,s_60);
+    s_60 = XSteam('s_ph',p_60,h_60); %[kJ/kg/K]
+    e_60 = exergie(h_60,s_60); %[kJ/kg]
     
     %%%%%%%%%%%%%%%% Si pas resurchauffe %%%%%%%%%%%%%%%
 elseif reheat == 0
@@ -383,33 +381,25 @@ if nsout==0
     e_20=exergie(h_20,s_20);
     
 elseif nsout>0
-    %%%%%%%%% Calcul etat 61s et 61 %%%%%%%%
+    %%%%%%%%% Calcul etats 6xs et 6x %%%%%%%%
     % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
-    
+    %%%%test h_60 au lieu de h_60s
     h6s_temp = linspace(h_60s,h_50,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
     h6s = h6s_temp(2:length(h6s_temp)-1);
     s_60 = s_50;
-    p6s = zeros(1,length(h6s));
-    
-    for i=1:length(h6s)
-        p6s(i) = XSteam('p_hs',h6s(i),s_60); % XSteam, pas de vecteur en arg
-    end
+    p6s = arrayfun( @(h) XSteam('p_hs',h,s_60),h6s);
+
     p6 = p6s; %hypothese
     h6=h_50+eta_SiT_others*(h_50-h6s);
-    
+    %x_60 = x_40;
+    T6 = arrayfun( @(h) XSteam('T_hs',h,s_60),h6);
+    x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
+    e6 = exergie(h6,s_60);
     % l'echangeur en sortie de HP a son etat deja defini
     h6 = [h6 h_40];
     p6 = [p6 p_40];
-    %x_60 = x_40;
-    %preallocation
-    T6 = zeros(1,length(h6)-1);
-    x6 = zeros(1,length(T6));
-    e6 = zeros(1,length(T6));
-    for i=1:length(h6)-1 % l'etat 40 est deja defini
-        T6(i) = XSteam('T_hs',h6(i),s_60);
-        x6(i) = XSteam('x_ph',p6(i),h6(i));
-        e6(i) = exergie(h6(i),s_60);
-    end
+    T6 = [T6 T_40];
+
     %% Degazification
     %%%%%%%%% Calcul etat 7x %%%%%%%%%%
     p7 = p6; % on considere les vannes de detente apres les etats 7
@@ -425,7 +415,7 @@ elseif nsout>0
         T7(i) = XSteam('Tsat_p',p7(i));
         if T7(i) >= Tdrum && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Ã‚Â°C
             % calcul de la pression dans le degazificateur
-            p_degaz = p7(i); %temperature avant la pompe pb
+            p_degaz = p7(i); %pression avant la pompe pb
             flag = 1;
             d = i ; % endroit du degazificateur
         end
@@ -442,10 +432,7 @@ elseif nsout>0
     T_80=XSteam('T_ph',p_80,h_80);
     x_80=XSteam('x_ph',p_80,h_80);
     e_80=exergie(h_80,s_80);
-    
-    %%%%%%%%% Calcul etat 90 %%%%%%%%%%
-    %h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) )); %%%% A MODIFIER
-    
+        
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
     T_10 = T7(length(T7)-1)-TpinchEx;
     p_10 = p_degaz + (p_21 - p_degaz)/3; % hypothese
@@ -498,59 +485,8 @@ elseif nsout>0
     s_110 = XSteam('s_pT',p_110,T_110);
     x_110 = XSteam('x_ph',p_110,T_110);
     e_100 = exergie(h_110,s_110);
-    
-    %%%%%%%%% Calcul des Soutirages X %%%%%%%%%%
-    A = zeros(nsout,nsout);
-    B = zeros(nsout,1);
-    %remplissage de la matrice A et B
-    %premiere ligne particuliere
-    A(1,1:d-1) = A(1,1:d-1) + ( h9(1) - h_80 - h_100 + h7(1) );
-    A(1,1) = A(1,1) - ( h7(1) -h6(1) );
-    A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
-    
-    B(1) = h9(1)-h_80-h_100+h7(1);
-    
-    %TEST sans subcooler
-    %     A(1,1:d-1) = ( h9(1) - h_80);
-    %     A(1,1) = A(1,1) - ( h7(1) -h6(1) );
-    %     A(1,2:d-1) = A(1,2:d-1) - ( h7(1) - h7(2) );
-    %
-    %     B(1) = h9(1)-h_80;
-    %
-    for i=2:nsout % i les lignes de la matrice
-        if i < nsout
-            deltaH7  = h7(i) - h7(i+1);
-        end
-        deltaH9  = h9(i) - h9(i-1);
-        deltaH76 = h7(i) - h6(i);
-        if i < d
-            A(i,1:d-1) = A(i,1:d-1) + deltaH9;
-            A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
-            A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
-            B(i) = deltaH9;
-        end
-        if i > d
-            A(i,:) = A(i,:) + deltaH9;
-            A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
-            if i < nsout
-                A(i,i+1:nsout) = A(i,i+1:nsout) - deltaH7;
-            end
-            B(i) = deltaH9;
-        end
-    end
-    % remplissage ligne d particuliere
-    A(d,1:d-1) = A(d,1:d-1) + h7(d) - h9(d-1);
-    A(d,d) = h7(d) - h6(d);
-    A(d,d+1:nsout) = A(d,d+1:nsout) + h7(d) - h7(d+1);
-    %Ax=B
-    B(d) = h7(d) - h9(d-1);
-    % Resolution
-    
-    X = A\B; %fractions soutiree
-    XMASSFLOW = X;
-    
-    %%%%%%%%% Calcul etat 90 %%%%%%%%%%
-    h_90 = h_80 + (h_100 - h7(1)) * sum( XMASSFLOW(1:d-1) )/( 1+ sum( XMASSFLOW(1:d-1) ));
+    %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
+    XMASSFLOW = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
 end
 %% remplissage output
 
@@ -598,7 +534,7 @@ if reheat == 0
 elseif reheat == 1
     
     W_mT = (X_tot+1)*(h_30 - h_40) + (h_50 - h_60);
-    Q_I = (X_tot+1)*(h_30 - h_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(h_50 - h_40);% par kg
+    Q_I = (X_tot+1)*(h_30 - h_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(h_50 - h_40);% [kj]
     ex_I =(X_tot+1)*(e_30 - e_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(e_50-e_40);
     
     if nsout > 1
@@ -667,7 +603,6 @@ elseif x == 0 && y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1
     x_CO2 = 3*44/MmComb;
     x_H2O = 4*18/MmComb;
     x_N2 = 5*lambda*3.76*28/MmComb;
-    
 end
 %on change les fractions massiques en (kg/kg_fumee)
 Sum = x_O2 + x_CO2 + x_H2O + x_N2 ;
@@ -676,9 +611,6 @@ x_CO2 = x_CO2/Sum;
 x_N2 = x_N2/Sum;
 x_H2O = x_H2O/Sum;
 ma1 = (32+3.76*28.15)*(1+(y/4))/(12.01+1.008*y); % pouvoir comburivore [kg_air_stoech/kg_comb]
-COMBUSTION.LHV = LHV;
-COMBUSTION.e_c = e_c;
-COMBUSTION.lambda = lambda;
 
 %%Calcul Cp moyen des fumees
 T_exh = T_exhaust;%T en sortie de cheminee
@@ -693,34 +625,35 @@ else
 end
 
 
-CpMoy_f = CPmoy(x_O2,x_CO2,x_H2O,x_N2,linspace(300,TK_f,100)); %[kj/kg*K]
-delta_hf = CpMoy_f *(TK_f-TK_0);% [kj/kg]
+Cp_f = CP(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_f,100)); %[kj/kg/K]
+CpMoy_f = CPmoy(x_O2, x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_f,100)); %[kj/kg/K]
+delta_hf = Cp_f *(TK_f-TK_0);% [kj/kg]
 delta_Sf = CpMoy_f * log(TK_f/TK_0); % [kj/kg*K]
 e_f = delta_hf-TK_0*delta_Sf; % [kj/kg]
 %e_f = 1881; %kJ/kg
 
-CpMoy_exh = CPmoy(x_O2,x_CO2,x_H2O,x_N2,linspace(300,TK_exh,50));
-delta_h_exh = CpMoy_exh*(TK_exh-TK_0); % [kj/kg]
-delta_S_exh = CpMoy_exh*log(TK_exh/TK_0); % [kj/kg*K]
+Cp_exh = CP(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100));
+CpMoy_exh = CPmoy(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100));
+delta_h_exh = Cp_exh*(TK_exh-TK_0); % [kj/kg]
+delta_S_exh = CpMoy_exh*log(TK_exh/TK_0); % [kj/kg/K]
 e_exh = delta_h_exh-TK_0*delta_S_exh; % [kj/kg]
 
 %%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
 %Enthalpie de l'air�a T_0
-x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
-x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
+x_a_O2 = 0.21*32/28.84; %fraction massique de O2 dans l'air
+x_a_N2 = 0.79*28/28.84; %fraction massique de N2 dans l'air
 
-Cp_air =x_a_N2*janaf('c','N2',TK_janaf)+x_a_O2*janaf('c','O2',TK_janaf);
-Cp_air_2 =0.79*janaf('c','N2',TK_janaf)+0.21*janaf('c','O2',TK_janaf);
+Cp_air =x_a_N2*janaf('c','N2',TK_exh)+x_a_O2*janaf('c','O2',TK_exh);
 
 % Enthalpie, entropie et exergie du melange fuel+air p32
-e_r = 0.04; %Pris a l'etat de reference
+e_r = 0.04;%[kj/kg] %Pris a l'etat de reference
 
 %%Rendement du boiler
-p_chem = ((((lambda*ma1)+1)*CpMoy_exh*TK_exh)-(lambda*ma1*Cp_air*TK_janaf))/LHV;
+p_chem = ((((lambda*ma1)+1)*Cp_exh*TK_exh)-(lambda*ma1*Cp_air*TK_janaf))/LHV;
 p_wall = 0.01;
-rend_boiler = 1 - p_wall - p_chem
+rend_boiler = 1 - p_wall - p_chem;
 %rend_boiler = 0.945;
-%rend_boiler = (m_vap*(h_30-h_20))/(m_comb*LHV);
+% rend_boiler = (m_vap*(h_30-h_20))/(m_comb*LHV);
 %         if reheat ==0
 %             rend_boiler = m_vap*(X_tot+1)*(h_30-h_20)/(m_comb*LHV*10^3);
 %         elseif reheat ==1
@@ -739,42 +672,44 @@ rend_cyclen = (W_mT - W_mP)/Q_I;
 rend_toten = rend_boiler*eta_mec*rend_cyclen;
 
 %% pertes et puissances
-Pu_tot = m_comb*LHV*10^3;                             % Puissance Totale
-Per_boiler = Pu_tot*(1-rend_boiler);                  % pertes a la chaudiere
-Pu_turb = P_e/eta_SiT_HP;                             % Puissance a la turbine
-Per_meca = Pu_turb*10^3*(1-eta_mec) + W_mP;           % pertes mecanique
-Per_cond =  Pu_tot - P_e*10^3 - Per_boiler - Per_meca;% pertes au condenseur
+Pu_tot = m_comb*LHV;                             % Puissance Totale
+Per_boiler = Pu_tot*(1-rend_boiler);             % pertes a la chaudiere
+Pu_turb = P_e/eta_SiT_HP;                        % Puissance a la turbine
+Per_meca = Pu_turb*(1-eta_mec) + W_mP;           % pertes mecanique
+Per_cond =  Pu_tot - P_e - Per_boiler - Per_meca;% pertes au condenseur
 
 %% Rendement exergetique du cycle
-P_totex = m_comb*e_c*10^3;                       % Flux exergetique total
-rend_totex = P_e*10^3/P_totex;                   % rendement exergetique total
-rend_gex = m_vap*ex_I*10^3/(m_comb*e_c*10^3);    % rendement exergetique du generateur
+
+P_totex = m_comb*e_c; %[kj/s]                    % Flux exergetique total
+rend_totex = P_e/P_totex;                        % rendement exergetique total
+rend_gex = m_vap*ex_I/(m_comb*e_c);    % rendement exergetique du generateur
 %unite combex?
-rend_combex =( m_fum*((e_f*10^3)-e_r))/(P_totex);% rendement exergetique de la combustion
+rend_combex =(m_fum*((e_f)-e_r))/(P_totex); % rendement exergetique de la combustion
 rend_chemex = (e_f-e_exh)/(e_f-e_r);             % rendement exergetique de la cheminee; P.65
 rend_transex = (m_vap*ex_I)/(m_fum*(e_f-e_exh)); % rendement exergetique du transfert de chaleur; P.65
 rend_rotex = (W_mT-W_mP)/(ex_mT-ex_mP);          % rendement exergetique de la turbine; P.65
 rend_cyclex = rend_rotex*(ex_mT-ex_mP)/ex_I;     % rendement exergetique du cycle; P.65
 
 %% Pertes exergetiques
-perte_turbex = P_e*10^3/eta_SiT_HP*(1/rend_rotex-1);          % pertes exergetiques du aux  pompes
+%eta ?
+perte_turbex = P_e/eta_SiT_HP*eta_SiT_others*(1/rend_rotex-1);% pertes exergetiques du aux  pompes
 perte_combex = P_totex*(1-rend_combex);                       % pertes exergetiques du a la combustion
-perte_transex = (m_fum*(e_f - e_exh)*10^3) - m_vap*ex_I*10^3; % pertes exergetiques du au transfert de chaleur
-perte_condex = 10^3*m_vap *(e_60-e_70);                       % pertes exergetiques du a la condensation
-perte_chemex = e_exh*m_fum*10^3;                              % pertes exergetiques du a la cheminee
+perte_transex = (m_fum*(e_f - e_exh)) - m_vap*ex_I;           % pertes exergetiques du au transfert de chaleur
+perte_condex = m_vap *(e_60-e_70);                       % pertes exergetiques du a la condensation
+perte_chemex = e_exh*m_fum;                              % pertes exergetiques du a la cheminee
 % pertes exergetiques totales
 perte_totex = perte_turbex + perte_combex + perte_transex + perte_condex + perte_chemex +Per_meca;
 
 %% Remplissage des vecteurs
 ETA(1) = rend_cyclen;
-ETA(2)= rend_toten;
+ETA(2) = rend_toten;
 ETA(3) = rend_cyclex;
-ETA(4)  = rend_totex;
+ETA(4) = rend_totex;
 ETA(5) = rend_boiler;
-ETA(6)= rend_gex;
-ETA(7) =rend_combex;
-ETA(8) =rend_chemex;
-ETA(9) =rend_transex;
+ETA(6) = rend_gex;
+ETA(7) = rend_combex;
+ETA(8) = rend_chemex;
+ETA(9) = rend_transex;
 
 DATEN(1) = Per_boiler;
 DATEN(2) = Per_meca;
@@ -796,7 +731,7 @@ MASSFLOW(4) = m_fum;
 COMBUSTION.LHV = LHV;
 COMBUSTION.e_c = e_c;
 COMBUSTION.lambda = lambda;
-COMBUSTION.Cp_g = CpMoy_f;
+COMBUSTION.Cp_g = Cp_exh;
 COMBUSTION.fum(1) = x_O2*m_fum;
 COMBUSTION.fum(2) = x_N2*m_fum;
 COMBUSTION.fum(3) = x_CO2*m_fum;
@@ -806,7 +741,8 @@ COMBUSTION.fum(4) = x_H2O*m_fum;
 if display == 1
     if reheat == 0
         if nsout == 0
-            FIG = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others);
+            FIG(1:2) = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others);
+            FIG(3) = pie(DATEN,'Pertes generateur de vapeur','','')
         else
             %FIG = plot_nsout(DAT,eta_SiT_HP,eta_SiT_others);
         end
