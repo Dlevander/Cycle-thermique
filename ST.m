@@ -408,15 +408,12 @@ elseif nsout>0
     h7 = zeros(1,length(T6));
     s7 = zeros(1,length(T6));
     % les temperature de condensation sont les temp de sortie des echangeurs
-    flag = 0;
-    p_degaz = 0;
     d = 0;
     for i=1:length(p7)
         T7(i) = XSteam('Tsat_p',p7(i));
-        if T7(i) >= Tdrum && flag==0 %flag pour s'assurer que ce ne soit pas letat avec la temp max qui soit retenu mais bien celui juste au dessus de 120Ã‚Â°C
+        if T7(i) >= Tdrum && d == 0 && drumflag == 1
             % calcul de la pression dans le degazificateur
             p_degaz = p7(i); %pression avant la pompe pb
-            flag = 1;
             d = i ; % endroit du degazificateur
         end
         h7(i) = XSteam('hL_p',p7(i));
