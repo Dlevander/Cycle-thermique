@@ -1,6 +1,6 @@
 function XMASSFLOW = Soutirage(h6,h7,h_80,h9,h_100,nsout,d)
 % resolution iterative du systeme de n equation a n inconnues
-h_90_new = 2000; % valeur initiale de h_90
+h_90_new = 20; % valeur initiale de h_90
 err = 10000;
 while err >=0.001
     h_90 = h_90_new;
@@ -24,7 +24,7 @@ while err >=0.001
             A(i,1:d-1) = A(i,1:d-1) + deltaH9;
             A(i,i) = A(i,i) - deltaH76; % remplissage diagonale
             A(i,i+1:d-1) = A(i,i+1:d-1) - deltaH7;
-            B(i) = deltaH9;
+            B(i) = -deltaH9;
         end
         if i > d
             A(i,:) = A(i,:) + deltaH9;
@@ -32,7 +32,7 @@ while err >=0.001
             if i < nsout
                 A(i,i+1:nsout) = A(i,i+1:nsout) - deltaH7;
             end
-            B(i) = deltaH9;
+            B(i) = -deltaH9;
         end
     end
     % remplissage ligne d particuliere
