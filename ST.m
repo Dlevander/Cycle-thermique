@@ -48,7 +48,7 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 %   -eta(8) : eta_chemex, Chimney exergy efficiency (losses)
 %   -eta(9) : eta_transex, Heat exchanger overall exergy efficiency
 %   FYI : eta(i) \in [0;1] [-]
-% Xmassflow is a vector with each feedheating massflow [kg/s] (respect to figure
+% XMASSFLOW is a vector with each feedheating massflow [kg/s] (respect to figure
 %           2.33, page 91 "Thermal Power Plants" English version).
 %           Xmassflow(1) = mass flow at 6_1 etc...
 % DATEN is a vector with :
@@ -194,7 +194,7 @@ end
 if isfield(options,'p_3')
     p_3 = options.p_3;
 else
-    p_3 = 62;  % [bar]
+    p_3 = 20;  % [bar]
 end
 
 if isfield(options,'x4')
@@ -248,8 +248,8 @@ if isfield(options,'eta_SiT')
         eta_SiT_others = eta_SiT_HP;
     end
 else
-    eta_SiT_HP = sqrt(0.88);  % [-]
-    eta_SiT_others = sqrt(0.88); % on considere rendement egale pour les turbines MP et BP
+    eta_SiT_HP = 0.88;  % [-]
+    eta_SiT_others = 0.88; % on considere rendement egale pour les turbines MP et BP
 end
 
 if P_e <= 0
@@ -258,7 +258,7 @@ end
 
 %%%%%%%%%%%%%%% OUTPUT %%%%%%%%%%%%%%%%%%%
 ETA = zeros(9,1);
-XMASSFLOW = zeros(nsout,1);
+X = zeros(nsout,1);
 DATEN = zeros(3,1);
 DATEX = zeros(7,1);
 %numEtat = 7+reheat+nsout;
@@ -312,9 +312,20 @@ if reheat == 1
     
     %%%%%%%%%%%%%%% ETAT 50 %%%%%%%%%%%%%%%
     % Entree de la turbine MP dans le cas d'une resurchauffe
+    T_50 = T_30;
+    %%%%trouver la p_3 la plus optimale
+    if isfield(options,'p_3')
+        p_3 = options.p_3;
+    else
+        x_60= x4;
+        T_60 = T_cond_out
+        h_60 = XSteam('h_Tx',T_cond_out,x_60);
+        p_3 = fsolve(@(p) (XSteam('h_pT',p,T_50)-h_60)/(XSteam('h_pT',p,T_50)-XSteam('h_ps',p,XSteam('s_pT',p,T_50)))-eta_SiT_others,10)
+    end
+
     
     p_50 = p_3; %la pression apres la resurchauffe
-    T_50 = T_30;
+    
     h_50 = XSteam('h_pT',p_50,T_50);
     s_50 = XSteam('s_pT',p_50,T_50);
     x_50 = XSteam('x_ph',p_50,h_50);% = NaN car vapeur surchauffee
@@ -345,7 +356,7 @@ elseif reheat == 0
     p_60 = XSteam('psat_T',T_60);
     x_60s = XSteam('x_ps',p_60,s_60s);
     h_60s = XSteam('h_Tx',T_60,x_60s);
-    h_60 = h_30 - eta_SiT_HP * eta_SiT_others * (h_30-h_60s);
+    h_60 = h_30 - eta_SiT_HP* (h_30-h_60s);
     x_60 = XSteam('x_ph',p_60,h_60);
     s_60 = XSteam('s_ph',p_60,h_60);
     e_60 = exergie(h_60,s_60);
@@ -390,7 +401,7 @@ elseif nsout>0
     p6s = arrayfun( @(h) XSteam('p_hs',h,s_60),h6s);
 
     p6 = p6s; %hypothese
-    h6=h_50+eta_SiT_others*(h_50-h6s);
+    h6=h_50+eta_SiT_others*eta_SiT_others*(h_50-h6s);
     %x_60 = x_40;
     T6 = arrayfun( @(h) XSteam('T_hs',h,s_60),h6);
     x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
@@ -411,7 +422,7 @@ elseif nsout>0
     d = 0;
     for i=1:length(p7)
         T7(i) = XSteam('Tsat_p',p7(i));
-        if T7(i) >= Tdrum && d == 0 && drumflag == 1
+        if T7(i) >= Tdrum && d == 0 && drumFlag == 1
             % calcul de la pression dans le degazificateur
             p_degaz = p7(i); %pression avant la pompe pb
             d = i ; % endroit du degazificateur
@@ -419,7 +430,10 @@ elseif nsout>0
         h7(i) = XSteam('hL_p',p7(i));
         s7(i) = XSteam('sL_p',p7(i));
     end
-    
+    if d == 0
+        drumFlag = 0; % aucune temperature ne permet d'avoir un bache de degazification
+        d = nsout+1; % pour la fonction Soutirage
+    end
     %%%%%%%%%%%%%%% ETAT 80 %%%%%%%%%%%%%%%
     %Apres la pompe Pe, de rendement isentropique option.eta_SiC
     p_80 = p_degaz ;
@@ -483,7 +497,9 @@ elseif nsout>0
     x_110 = XSteam('x_ph',p_110,T_110);
     e_100 = exergie(h_110,s_110);
     %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
-    XMASSFLOW = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
+    
+    X = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
+    X = Soutirage2(h6,h7,h_80,h9,h_100,nsout,d);
 end
 %% remplissage output
 
@@ -510,7 +526,7 @@ elseif reheat == 1
     end
 end
 %% Combustion
-X_tot = sum(XMASSFLOW);
+X_tot = sum(X);
 %  ex_mT    exergie du travail moteur de la turbine [kJ/kg]
 %  W_mT     Travail moteur de la turbine
 %  Q_I      Action calorifique a la chaudiere [kJ/kg]
@@ -522,8 +538,8 @@ if reheat == 0
     ex_I = (X_tot+1)*(e_30 - e_20);
     if nsout > 0
         for i = 1:nsout
-            W_mT = W_mT + XMASSFLOW(i)*(h_30 - h6(i));
-            ex_mT = ex_mT + XMASSFLOW(i)*(e_30 - e6(i));
+            W_mT = W_mT + X(i)*(h_30 - h6(i));
+            ex_mT = ex_mT + X(i)*(e_30 - e6(i));
         end
     end
     ex_mT = ex_mT + e_30 - e_60;
@@ -531,13 +547,13 @@ if reheat == 0
 elseif reheat == 1
     
     W_mT = (X_tot+1)*(h_30 - h_40) + (h_50 - h_60);
-    Q_I = (X_tot+1)*(h_30 - h_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(h_50 - h_40);% [kj]
-    ex_I =(X_tot+1)*(e_30 - e_20) + (sum(XMASSFLOW(1:nsout-1))+1)*(e_50-e_40);
+    Q_I = (X_tot+1)*(h_30 - h_20) + (sum(X(1:nsout-1))+1)*(h_50 - h_40);% [kj]
+    ex_I =(X_tot+1)*(e_30 - e_20) + (sum(X(1:nsout-1))+1)*(e_50-e_40);
     
     if nsout > 1
         for i = 1:(nsout-1)
-            W_mT = W_mT + XMASSFLOW(i)*(h_50 - h6(i));
-            ex_mT = ex_mT + (XMASSFLOW(i)*(e_50 - e6(i)));
+            W_mT = W_mT + X(i)*(h_50 - h6(i));
+            ex_mT = ex_mT + (X(i)*(e_50 - e6(i)));
         end
     end
     
@@ -563,7 +579,7 @@ end
 
 % m_vap    debit massique de vapeur
 m_vap = P_e/(eta_mec*(W_mT-W_mP)); %page 60
-
+XMASSFLOW = X*m_vap;
 %%%%%%%% Combustion  %%%%%%
 %%determination des fractions massiques des fumees
 
