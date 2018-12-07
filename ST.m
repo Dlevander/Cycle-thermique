@@ -1,4 +1,4 @@
-function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,options,display)
+function [ETA,X,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,options,display)
 % ST Steam power plants modelisation
 % ST(P_e,options,display) compute the thermodynamics states for a Steam
 % power plant (combustion, exchanger, cycle) turbine based on several
@@ -200,7 +200,7 @@ end
 if isfield(options,'x4')
     x4 = options.x4;
 else
-    x4 = 0.88;  % [-]
+    x4 = 0.89;  % [-]
 end
 
 if isfield(options,'T_0')
@@ -318,12 +318,10 @@ if reheat == 1
         p_3 = options.p_3;
     else
         x_60= x4;
-        T_60 = T_cond_out
         h_60 = XSteam('h_Tx',T_cond_out,x_60);
-        p_3 = fsolve(@(p) (XSteam('h_pT',p,T_50)-h_60)/(XSteam('h_pT',p,T_50)-XSteam('h_ps',p,XSteam('s_pT',p,T_50)))-eta_SiT_others,10)
+        p_3 = fsolve(@(p) (XSteam('h_pT',p,T_50)-h_60)/(XSteam('h_pT',p,T_50)-XSteam('h_ps',p,XSteam('s_pT',p,T_50)))-eta_SiT_others,10);
     end
 
-    
     p_50 = p_3; %la pression apres la resurchauffe
     
     h_50 = XSteam('h_pT',p_50,T_50);
@@ -395,13 +393,13 @@ elseif nsout>0
     %%%%%%%%% Calcul etats 6xs et 6x %%%%%%%%
     % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
     %%%%test h_60 au lieu de h_60s
-    h6s_temp = linspace(h_60s,h_50,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
+    h6s_temp = linspace(h_60,h_50,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
     h6s = h6s_temp(2:length(h6s_temp)-1);
     s_60 = s_50;
     p6s = arrayfun( @(h) XSteam('p_hs',h,s_60),h6s);
 
     p6 = p6s; %hypothese
-    h6=h_50+eta_SiT_others*eta_SiT_others*(h_50-h6s);
+    h6=h_50-eta_SiT_others*(h_50-h6s);
     %x_60 = x_40;
     T6 = arrayfun( @(h) XSteam('T_hs',h,s_60),h6);
     x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
@@ -498,7 +496,6 @@ elseif nsout>0
     e_100 = exergie(h_110,s_110);
     %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
     
-    X = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
     X = Soutirage2(h6,h7,h_80,h9,h_100,nsout,d);
 end
 %% remplissage output
@@ -579,7 +576,7 @@ end
 
 % m_vap    debit massique de vapeur
 m_vap = P_e/(eta_mec*(W_mT-W_mP)); %page 60
-XMASSFLOW = X*m_vap;
+XMASSFLOW = X;%*m_vap;
 %%%%%%%% Combustion  %%%%%%
 %%determination des fractions massiques des fumees
 

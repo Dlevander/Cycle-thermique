@@ -12,7 +12,7 @@ close all
 optionsST.nsout = 6;   %  [-] : Number of feed-heating
 optionsST.reheat  = 1; %  [-] : Number of reheating
 optionsST.T_max = 525; %  [°C] : Maximum steam temperature
-optionsST.T_cond_out = 3; %  [°C] : Condenseur cold outlet temperature
+optionsST.T_cond_out = 33; %  [°C] : Condenseur cold outlet temperature
 optionsST.p3_hp = 200;    %  [bar] : Maximum pressure
 %   -options.drumFlag  [-] : if =1 then drum if =0 => no drum.
 options.eta_mec = 0.98;  %[-] : mecanic efficiency of shafts bearings
@@ -23,7 +23,7 @@ optionsST.comb.lambda = 1.05;%  [-] : air excess
 %       -comb.y        [-] : the ratio H_y/C. Example 1.2 in CH_1.2O_0.05
 optionsST.T_exhaust = 120; % [C] : Temperature of exhaust gas out of the chimney
 %optionsST.p_3 = 10.5; %      [-] : High pressure after last reheating
-optionsST.x4 = 0.89; %       [-] : Vapor ratio [gaseous/liquid] (in french : titre)
+optionsST.x4 = 0.96; %       [-] : Vapor ratio [gaseous/liquid] (in french : titre)
 %   -options.T_0       [C] : Reference temperature
 optionsST.TpinchSub = 4;%[C] : Temperature pinch at the subcooler
 optionsST.TpinchEx = 15; %  [C] : Temperature pinch at a heat exchanger
