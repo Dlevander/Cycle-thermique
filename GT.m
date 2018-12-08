@@ -77,16 +77,16 @@ function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION] = GT(P_e,options,display)
 
 %% Your Work
 
-% Exemple of how to use 'nargin' to check your number of inputs
-if nargin<3
-    display=1;
-   if nargin<2
-       options=struct();
-       if nargin<1
-           P_e=100e3;%100MW
-       end
-   end
-end
+% % Exemple of how to use 'nargin' to check your number of inputs
+% if nargin<3
+%     display=1;
+%    if nargin<2
+%        options=struct();
+%        if nargin<1
+%            P_e=100e3;%100MW
+%        end
+%    end
+% end
 
 
 % Exemple of how to use (isfield' to check if an option has been given (or
@@ -100,7 +100,7 @@ end
 if isfield(options,'k_mec')
     k_mec = options.k_mec;
 else
-    k_mec = 0.98;   
+    k_mec = 0.95;   
 end
 
 if isfield(options,'T_ext')
@@ -112,7 +112,7 @@ end
 if isfield(options,'r')
     r = options.r;
 else
-    r = 10;   
+    r = 18;   
 end
 
 if isfield(options,'k_cc')
@@ -125,7 +125,7 @@ end
 if isfield(options,'T_3')
     T_3 = options.T_3;
 else
-    T_3 = 1050;   %C
+    T_3 = 1400;   %C
 end
 
 
@@ -141,11 +141,12 @@ else
     eta_PiT = 0.9;   
 end
 
+x = 0;
+y = 4; % Hypothese : CH4
+
 
 %%%%%%%%%%%%%%% OUTPUT %%%%%%%%%%%%%%%%%%%
 ETA = zeros(6,1);
-
-XMASSFLOW = zeros(nsout,1);
 
 DATEN = zeros(2,1);
 
@@ -155,18 +156,20 @@ DAT= zeros(5,4);
 
 MASSFLOW = zeros(3,1); %A MODIFIER
 COMBUSTION = zeros(5,1); %A MODIFIER
-fum = zeros(4,1);
-combustion(5) = fum;
+%fum = zeros(4,1);
+%combustion(5) = fum;
 
 FIG = 0; %A MODIFIER
 
 %%%%% Calcul des états %%%%%%
 R_air = 287.1; %J/kg.K 
+x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
+x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
 % %calcul point 1 : air atmosphérique
 
-p_1 = 1,01325 ; %bar
+p_1 = 1,01325;  %bar
 T_1 = T_ext ;
-Cp_air_27 = 1000*(0.79*janaf('c','N2',300)+0.21*janaf('c','O2',300)) ; %J/kg*K
+Cp_air_27 = 1000*(x_a_N2*janaf('c','N2',300)+x_a_O2*janaf('c','O2',300)) ; %J/kg*K
 h_1 = T_ext * Cp_air_27 ;
 s_1 = Cp_air_27*log((T_ext+273.15)/273.15); %J/kg*K
 e_1 = 0; % point de reference
@@ -174,33 +177,73 @@ e_1 = 0; % point de reference
 %%calcul point 2 : apres la pompe
 
 p_2 = r*p_1 ;
-T_2 = transf_poly('compression',T_ext,r,eta_PiC,R_air,0); %renvoie T en sortie de compresseur en C, pas besoin des compo fumee pour 1 compr
-Cp_12 = 1000*(0.79*mean(janaf('c','N2',linspace(T_1+273,T_2+273,50)))+0.21*mean(janaf('c','O2',linspace(T_1+273,T_2+273,50)))) ; %J/kg*K faire cp moyen entre T1 et T2 ?
+%T_2=429;
+T_2 = transf_poly('compression',T_ext,r,eta_PiC,R_air,0,0,0,0); %renvoie T en sortie de compresseur en C, pas besoin des compo fumee pour 1 compr
+TK_2=T_2+273.15;
+Cp_12 = 1000*(x_a_N2*mean(janaf('c','N2',linspace(300,TK_2)))+x_a_O2*mean(janaf('c','O2',linspace(300,TK_2)))) ; %J/kg*K faire cp moyen entre T1 et T2 ?
 h_2 = h_1 + Cp_12*(T_2-T_1);
-s_2 = s_1 + ((1-eta_PiC)*Cp_2*log((T_2+273.15)/(T_1+273.15)); %eq 3.15
+s_2 = s_1 + (1-eta_PiC)*Cp_12*log((TK_2)/(T_1+273.15)); %eq 3.15
+%h_2=443400;
+%s_2=142;
 e_2 = (h_2-h_1) - 273.15*(s_2-s_1);
 
 %%calcul point 3 : après la combustion
 
 T_3 = T_3 ; % really ?
 p_3 = p_2*k_cc; %pertes de charges dans chambre combustion
-
-[x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T2,T3);
-Cp_23 =(x_N2*mean*(janaf('c','N2',linspace(T_2+273,T_3+273,50))) + x_O2*mean*(janaf('c',O2',linspace(T_2+273,T_3+273,50))) + x_CO2*mean*(janaf('c','CO2',linspace(T_2+273,T_3+273,50))) + x_H2O*mean*(janaf('c',H2O',linspace(T_2+273,T_3+273,50))))*1000; %faire cp moyen entre T2 et T3 ?
+TK_3=T_3+273.15;
+[x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T_2,T_3);
+Cp_23 =(x_N2*mean(janaf('c','N2',linspace(TK_2,TK_3))) + x_O2*mean(janaf('c','O2',linspace(TK_2,TK_3))) + x_CO2*mean(janaf('c','CO2',linspace(TK_2,TK_3))) + x_H2O*mean(janaf('c','H2O',linspace(TK_2,TK_3))))*1000; %faire cp moyen entre T2 et T3 ?
 h_3 =Cp_23*(T_3-T_2) + h_2;
-s_3 = s_2+ Cp_23*log((T_3+273)/(T_2+273) - R_fum*log(p_3/p_2);
+s_3 = s_2+ Cp_23*log(TK_3/TK_2) - R_fum*log(p_3/p_2);
 e_3 = (h_3-h_1) - 273.15*(s_3-s_1);
 
 %%Calcul point 4 : aprs la turbine
 p_4 = p_1 ;% atm
-compo_fum = [x_CO2 x_H2O x_O2 x_N2];
-T_4 = transf_poly('detente',T_3,p_4/p_3,eta_PiT,R_fum,compo_fum);
-Cp_34 =(x_N2*mean*(janaf('c','N2',linspace(T_3+273,T_4+273,50))) + x_O2*mean*(janaf('c',O2',linspace(T_3+273,T_4+273,50))) + x_CO2*mean*(janaf('c','CO2',linspace(T_3+273,T_4+273,50))) + x_H2O*mean*(janaf('c',H2O',linspace(T_3+273,T_4+273,50))))*1000;
+T_4 = transf_poly('detente',T_3,p_4/p_3,eta_PiT,R_fum,x_CO2,x_H2O,x_O2,x_N2);
+TK_4=T_4+273.15;
+Cp_34 =(x_N2*mean(janaf('c','N2',linspace(TK_3,TK_4))) + x_O2*mean(janaf('c','O2',linspace(TK_3,TK_4))) + x_CO2*mean(janaf('c','CO2',linspace(TK_3,TK_4))) + x_H2O*mean(janaf('c','H2O',linspace(TK_3,TK_4))))*1000;
 h_4 = h_3 + Cp_34*(T_4-T_3);
-s_4 = s_3 + Cp_34*log((T_4+273)/(T_3+273))* ((1-eta_PiT)/(eta_PiT));
+s_4 = s_3 - Cp_34*log(TK_4/TK_3)* ((1-eta_PiT)/eta_PiT);%eq3.16
 e_4 = (h_4-h_1) - 273.15*(s_4-s_1);
 
+%%Remplissage etats
 
+DAT(:,1) = [T_1 p_1 h_1 s_1 e_1]';
+DAT(:,2) = [T_2 p_2 h_2 s_2 e_2]';
+DAT(:,3) = [T_3 p_3 h_3 s_3 e_3]';
+DAT(:,4) = [T_4 p_4 h_4 s_4 e_4]';
+%%Rendements énergétiques %%
+P_e=P_e*10^3;
+q_comb = (1+1/(lambda*ma1))*(h_3-h_2); % formule 3.9 du livre
 
+W_T = h_3 - h_4; %J/kg
+W_C = h_2-h_1;
+
+eta_cyclen = 1-(((1+1/(lambda*ma1))*h_4-h_1)/((1+1/(lambda*ma1))*h_3-h_2)); %eq3.12
+eta_toten=k_mec*eta_cyclen;%eq3.31
+m_c=P_e/(LHV*1000*eta_toten);%debit comb
+m_a=lambda*ma1*m_c;%debit air
+m_g=m_a+m_c;%debit fumees
+
+%% rendement exergétique
+
+eta_cyclex=(m_g*(h_3-h_4)-m_a*(h_2-h_1))/(m_g*e_3-m_a*e_2);
+eta_rotex=(m_g*(h_3-h_4)-m_a*(h_2-h_1))/(m_g*(e_3-e_4)-m_a*(e_2-e_1));
+eta_combex=(m_g*e_3-m_a*e_2)/(m_g*h_3-m_a*h_2);%eq3.36 sans prendre en compte f
+eta_totex=eta_cyclex*eta_combex*k_mec; %p124
+
+%% Pertes
+Pm=P_e/k_mec;%puissance motrice
+Pprim=m_c*LHV*1000;%puissance totale
+pertes_mec=k_mec*(W_T*m_g+W_C*m_a);%eq3.29
+puissance_effect=Pprim*eta_totex;
+pertesTotex= Pprim*(1-eta_totex);
+pertes_cyclex= (m_g*e_3-m_a*e_2)-Pm;
+pertes_combu=(m_g*h_3-m_a*h_2)-(m_g*e_3-m_a*e_2);
+pertes_meca=Pm-P_e;
+pertes_cycle=Pprim*(1-eta_cyclex);
+pertes_comp_turb=(m_g*(e_3-e_4)-m_a*(e_2-e_1))-Pm;
+pertes_echap=(m_g*e_3-m_a*e_2)-(m_g*(e_3-e_4)-m_a*(e_2-e_1));
 
 end
