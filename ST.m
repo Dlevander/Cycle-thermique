@@ -489,7 +489,7 @@ elseif nsout>0
     e_100 = exergie(h_110,s_110);
     %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
     
-    [X,h_90] = Soutirage2(h6,h7,h_80,h9,h_100,nsout,d);
+    [X,h_90] = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
     
     %%%%%%%% Calcul etat 90 %%%%%%%%%%
     p_90 = p_degaz;

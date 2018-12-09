@@ -1,4 +1,4 @@
-function [X,h_90] = Soutirage2(h6,h7,h_80,h9,h_100,nsout,d)
+function [X,h_90] = Soutirage(h6,h7,h_80,h9,h_100,nsout,d)
 % resolution iterative du systeme de n equation a n inconnues
 h_90_new = 20; % valeur initiale de h_90
 err = 10000;
