@@ -366,7 +366,7 @@ h_70 = XSteam('hL_T',T_70);
 p_70 = XSteam('psat_T',T_70);
 s_70 = XSteam('sL_T',T_70);
 e_70 = exergie(h_70,s_70);
-x_70=XSteam('x_ph',p_70,h_70); %=0 car liquide saturee en sortie de condenseur
+x_70 = XSteam('x_ph',p_70,h_70); %=0 car liquide saturee en sortie de condenseur
 
 if nsout==0
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
@@ -379,13 +379,13 @@ if nsout==0
     x_10 = x_70;
     
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
-    p_20 = p_21; %hypothese %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
+    p_20  = p_21; %hypothese %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% pour RH1
     h_20s = XSteam('h_ps',p_20,s_10); %h dans le cas isentropique
-    h_20=h_10+(h_20s-h_10)/eta_SiC;%h en prenant compte rendement is
-    s_20=XSteam('s_ph',p_20,h_20);
-    T_20=XSteam('T_ph',p_20,h_20);
-    x_20=XSteam('x_ph',p_20,h_20);
-    e_20=exergie(h_20,s_20);
+    h_20  = h_10+(h_20s-h_10)/eta_SiC;%h en prenant compte rendement is
+    s_20  = XSteam('s_ph',p_20,h_20);
+    T_20  = XSteam('T_ph',p_20,h_20);
+    x_20  = XSteam('x_ph',p_20,h_20);
+    e_20  = exergie(h_20,s_20);
     
 elseif nsout>0
     %%%%%%%%% Calcul etats 6xs et 6x %%%%%%%%
@@ -397,7 +397,7 @@ elseif nsout>0
     p6s = arrayfun( @(h) XSteam('p_hs',h,s_60),h6);
 
     p6 = p6s; %hypothese
-    h6=h_50-eta_SiT_others*(h_50-h6);
+    h6 = h_50-eta_SiT_others*(h_50-h6);
     %x_60 = x_40;
     T6 = arrayfun( @(h) XSteam('T_hs',h,s_60),h6);
     x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
@@ -463,25 +463,13 @@ elseif nsout>0
     e_20=exergie(h_20,s_20);
     
     %%%%%%%%% Calcul des etat 9x %%%%%%%%
-    %preallocation
-    p9 = zeros(1,nsout);
-    s9 = zeros(1,nsout);
-    e9 = zeros(1,nsout);
-    h9 = zeros(1,nsout);
-    x9 = zeros(1,nsout);
     T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
-    for i = 1:nsout
-        if i<d
-            p9(i) = p_degaz;
-        else
-            p9(i) = p_10;
-        end
-        h9(i) = XSteam('h_pT',p9(i),T9(i));
-        s9(i) = XSteam('s_pT',p9(i),T9(i));
-        e9(i) = exergie(h9(i),s9(i));
-        x9(i) = XSteam('x_ph',p9(i),h9(i));
-    end
-    
+    p9 = [p_degaz*ones(1,d-1) p_10*ones(1,nsout-d+1)]; % avant bache, p9i = p_degaz, apres bache p9i = p_10
+    h9 = arrayfun( @(p,t) XSteam('h_pT',p,t),p9,T9);
+    s9 = arrayfun( @(p,t) XSteam('s_pT',p,t),p9,T9);
+    x9 = arrayfun( @(p,h) XSteam('x_ph',p,h),p9,h9);
+    e9 = exergie(h9,s9);
+
     %%%%%%%%% Calcul etat 100 %%%%%%%%%%
     %etat avant la vanne et apres le subcooler
     T_100 = T_80 + TpinchSub;
