@@ -1,4 +1,4 @@
-function [ETA,X,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,options,display)
+function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,options,display)
 % ST Steam power plants modelisation
 % ST(P_e,options,display) compute the thermodynamics states for a Steam
 % power plant (combustion, exchanger, cycle) turbine based on several
@@ -106,7 +106,6 @@ if nargin<3
     if nargin<2
         options = struct();
         if nargin<1
-            
             P_e = 250e3; % [kW] Puissance energetique de l'installation
         end
     end
@@ -118,25 +117,25 @@ end
 if isfield(options,'nsout')
     nsout = options.nsout;
 else
-    nsout = 0;  % [-]
+    nsout = 8;  % [-]
 end
 
 if isfield(options,'reheat')
     reheat = options.reheat;
 else
-    reheat = 0;  % [-]
+    reheat = 1;  % [-]
 end
 
 if isfield(options,'T_max')
     T_max = options.T_max;
 else
-    T_max = 520.0;  % [C]
+    T_max = 525.0;  % [C]
 end
 
 if isfield(options,'T_cond_out')
     T_cond_out = options.T_cond_out;
 else
-    T_cond_out = 30.0 ;  % [C]
+    T_cond_out = 33.0 ;  % [C]
 end
 
 if isfield(options,'p3_hp')
@@ -161,7 +160,7 @@ if isfield(options,'comb')
     if isfield(options.comb,'Tmax')
         Tmax = options.comb.Tmax;
     else
-        Tmax = 1900;  % [C] A MODIFIER
+        Tmax = 1900;
     end
     if isfield(options.comb,'lambda')
         lambda = options.comb.lambda;
@@ -179,7 +178,7 @@ if isfield(options,'comb')
         y = 4;  % [-] CH4
     end
 else
-    Tmax = 1900;  % [C] A MODIFIER
+    Tmax = 1900; 
     lambda = 1.05;  % [-]
     x = 0;  % [-] CH4
     y = 4;  % [-] CH4
@@ -194,7 +193,7 @@ end
 if isfield(options,'p_3')
     p_3 = options.p_3;
 else
-    p_3 = 20;  % [bar]
+    p_3 = 15;  % [bar]
 end
 
 if isfield(options,'x4')
@@ -212,7 +211,7 @@ end
 if isfield(options,'TpinchSub')
     TpinchSub= options.TpinchSub;
 else
-    TpinchSub = 15.0;  % [C]
+    TpinchSub = 4.0;  % [C]
 end
 
 if isfield(options,'TpinchEx')
@@ -224,7 +223,7 @@ end
 if isfield(options,'TpinchCond')
     TpinchCond= options.TpinchCond;
 else
-    TpinchCond = 18.0;  % [C]
+    TpinchCond = 15.0;  % [C]
 end
 
 if isfield(options,'Tdrum')
@@ -244,7 +243,7 @@ if isfield(options,'eta_SiT')
         eta_SiT_HP = options.eta_SiT(1);
         eta_SiT_others = options.eta_SiT(2);
     elseif length(options.eta_SiT) == 1
-        eta_SiT_HP = options.eta_SiT; % A MODIFIER SUREMENT
+        eta_SiT_HP = options.eta_SiT;
         eta_SiT_others = eta_SiT_HP;
     end
 else
@@ -258,7 +257,6 @@ end
 
 %%%%%%%%%%%%%%% OUTPUT %%%%%%%%%%%%%%%%%%%
 ETA = zeros(9,1);
-X = zeros(nsout,1);
 DATEN = zeros(3,1);
 DATEX = zeros(7,1);
 %numEtat = 7+reheat+nsout;
@@ -393,21 +391,26 @@ elseif nsout>0
     %%%%%%%%% Calcul etats 6xs et 6x %%%%%%%%
     % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
     %%%%test h_60 au lieu de h_60s
-    h6s_temp = linspace(h_60,h_50,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
-    h6s = h6s_temp(2:length(h6s_temp)-1);
+    h6_temp = linspace(h_60,h_50,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
+    h6 = h6_temp(2:length(h6_temp)-1);
     s_60 = s_50;
-    p6s = arrayfun( @(h) XSteam('p_hs',h,s_60),h6s);
+    p6s = arrayfun( @(h) XSteam('p_hs',h,s_60),h6);
 
     p6 = p6s; %hypothese
-    h6=h_50-eta_SiT_others*(h_50-h6s);
+    h6=h_50-eta_SiT_others*(h_50-h6);
     %x_60 = x_40;
     T6 = arrayfun( @(h) XSteam('T_hs',h,s_60),h6);
     x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
+    s6 = arrayfun( @(p,t) XSteam('s_pT',p,t),p6,T6);
     e6 = exergie(h6,s_60);
     % l'echangeur en sortie de HP a son etat deja defini
     h6 = [h6 h_40];
     p6 = [p6 p_40];
     T6 = [T6 T_40];
+    s6 = [s6 s_40];
+    x6 = [x6 x_40];
+    e6 = [e6 e_40];
+    
 
     %% Degazification
     %%%%%%%%% Calcul etat 7x %%%%%%%%%%
@@ -465,6 +468,7 @@ elseif nsout>0
     s9 = zeros(1,nsout);
     e9 = zeros(1,nsout);
     h9 = zeros(1,nsout);
+    x9 = zeros(1,nsout);
     T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
     for i = 1:nsout
         if i<d
@@ -475,6 +479,7 @@ elseif nsout>0
         h9(i) = XSteam('h_pT',p9(i),T9(i));
         s9(i) = XSteam('s_pT',p9(i),T9(i));
         e9(i) = exergie(h9(i),s9(i));
+        x9(i) = XSteam('x_ph',p9(i),h9(i));
     end
     
     %%%%%%%%% Calcul etat 100 %%%%%%%%%%
@@ -496,7 +501,15 @@ elseif nsout>0
     e_100 = exergie(h_110,s_110);
     %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
     
-    X = Soutirage2(h6,h7,h_80,h9,h_100,nsout,d);
+    [X,h_90] = Soutirage2(h6,h7,h_80,h9,h_100,nsout,d);
+    
+    %%%%%%%% Calcul etat 90 %%%%%%%%%%
+    p_90 = p_degaz;
+    T_90 = XSteam('T_ph',p_90,h_90);
+    s_90 = XSteam('s_ph',p_90,h_90);
+    x_90 = XSteam('x_ph',p_90,h_90);
+    e_90 = exergie(h_90,s_90);
+    
 end
 %% remplissage output
 
@@ -515,11 +528,11 @@ elseif reheat == 1
     DAT(:,7) = [T_50 p_50 h_50 s_50 e_50 x_50]';
     DAT(:,8) = [T_60 p_60 h_60 s_60 e_60 x_60]';
     if nsout > 1 % car si nsout = 1 => etat 4 = eta 61
-        %         DAT(:,9:8+noust) = [T6;p6;h6;s6;e6;x6];
-        %         DAT(:,9+noust) = [T_70 p_70 h_70 s_70 e_70 x_70]';
-        %         DAT(:,10+nsout) = [T_80 p_80 h_80 s_80 e_80 x_80]';
-        %         DAT(:,11+nsout) = [T_90 p_90 h_90 s_90 e_90 x_90]';
-        %         DAT(:,12+noust:11+2*nsout) = [T9;p9;h9;s9;e9;x9];
+                DAT(:,9:8+nsout) = [T6;p6;h6;s6;e6;x6];
+                DAT(:,9+nsout) = [T_70 p_70 h_70 s_70 e_70 x_70]';
+                DAT(:,10+nsout) = [T_80 p_80 h_80 s_80 e_80 x_80]';
+                DAT(:,11+nsout) = [T_90 p_90 h_90 s_90 e_90 x_90]';
+                DAT(:,12+nsout:11+2*nsout) = [T9;p9;h9;s9;e9;x9];
     end
 end
 %% Combustion
@@ -744,6 +757,8 @@ MASSFLOW(1) = ma1*lambda*m_comb;
 MASSFLOW(2) = m_vap;
 MASSFLOW(3) = m_comb;
 MASSFLOW(4) = m_fum;
+
+XMASSFLOW = X*m_vap;
 
 COMBUSTION.LHV = LHV;
 COMBUSTION.e_c = e_c;
