@@ -76,21 +76,16 @@ function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION] = GT(P_e,options,display)
 
 
 %% Your Work
+if nargin<3
+    display=1;
+   if nargin<2
+       options=struct();
+       if nargin<1
+           P_e=100e3;%100MW
+       end
+   end
+end
 
-% % Exemple of how to use 'nargin' to check your number of inputs
-% if nargin<3
-%     display=1;
-%    if nargin<2
-%        options=struct();
-%        if nargin<1
-%            P_e=100e3;%100MW
-%        end
-%    end
-% end
-
-
-% Exemple of how to use (isfield' to check if an option has been given (or
-% not)
 if isfield(options,'T_0')
     T_0 = options.T_0;
 else
