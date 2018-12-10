@@ -406,7 +406,7 @@ elseif nsout>0
     s6 = arrayfun( @(p,h) XSteam('s_ph',p,h),p6,h6);
     T6 = arrayfun( @(p,h) XSteam('T_ph',p,h),p6,h6);
     x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
-    e6 = exergie(h6,s6);
+    e6 = exergie(h6,s_60s);
     % l'echangeur en sortie de HP a son etat deja defini
     h6 = [h6 h_40];
     p6 = [p6 p_40];

@@ -41,12 +41,12 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout)
         linT56 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP56,linS56);
         
         %plot refroidissement isobare et condens soutirage 6-7
-%         linS67 = zeros(nsout,1000);
-%         linT67 = zeros(nsout,1000);
-%         for i=1:nsout
-%             linS67(i,:) = linspace(DAT(4,8+i),dat7(4,i),1000);
-%             linT67(i,:) = arrayfun( @(s) XSteam('T_ps',dat7(2,i),s),linS67(i,:));
-%         end
+        linS67 = zeros(nsout,1000);
+        linT67 = zeros(nsout,1000);
+        for i=1:nsout
+            linS67(i,:) = linspace(DAT(4,8+i),dat7(4,i),1000);
+            linT67(i,:) = arrayfun( @(s) XSteam('T_ps',dat7(2,i),s),linS67(i,:));
+        end
        
         
         %detente isenthalpique 7-10
@@ -62,7 +62,7 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout)
         %linS907 DAT(:,11+nsout)
         %plot 
         plot([linS13 linS34 linS45 linS56 linS67 linS78],[linT13 linT34 linT45 linT56 linT67 linT78],'r')
-        plot(DAT(4,1:8),DAT(1,1:8),'*')
+        plot(DAT(4,:),DAT(1,:),'*')
         plot(linS67,linT67,'linewidth',2)
         %plot Soutirage
         plot(linS67,linT67)
