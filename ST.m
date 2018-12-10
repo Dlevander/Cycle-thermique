@@ -420,11 +420,11 @@ elseif nsout>0
     %%%%%%%%% Calcul etat 7x %%%%%%%%%%
     p7 = p6; % on considere les vannes de detente apres les etats 7
     %preallocation
-    T7 = zeros(1,length(T6));
-    h7 = zeros(1,length(T6));
-    s7 = zeros(1,length(T6));
-    e7 = zeros(1,length(T6));
-    x7 = zeros(1,length(T6));
+    T7 = zeros(1,nsout);
+    h7 = zeros(1,nsout);
+    s7 = zeros(1,nsout);
+    e7 = zeros(1,nsout);
+    x7 = zeros(1,nsout);
     % les temperature de condensation sont les temp de sortie des echangeurs
     d = 0;
     for i=1:length(p7)
@@ -471,11 +471,14 @@ elseif nsout>0
     e_20=exergie(h_20,s_20);
     
     %%%%%%%%% Calcul des etat 9x %%%%%%%%
+    h9 = zeros(1,nsout);
+    
     T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
     h9(d)=h7(d)+eta_SiC*( XSteam('h_ps',p_10,s7(d)) - h7(d));
     T9(d) = XSteam('T_ph',p_10,h9(d));
     p9 = [p_degaz*ones(1,d-1) p_10*ones(1,nsout-d+1)]; % avant bache, p9i = p_degaz, apres bache p9i = p_10
-    h9 = arrayfun( @(p,t) XSteam('h_pT',p,t),p9,T9);
+    h9(1:d-1) = arrayfun( @(p,t) XSteam('h_pT',p,t),p9(1:d-1),T9(1:d-1));
+    h9(d+1:length(h9)) = arrayfun( @(p,t) XSteam('h_pT',p,t),p9(d+1:length(h9)),T9(d+1:length(h9)));
     s9 = arrayfun( @(p,t) XSteam('s_pT',p,t),p9,T9);
     x9 = arrayfun( @(p,h) XSteam('x_ph',p,h),p9,h9);
     e9 = exergie(h9,s9);
