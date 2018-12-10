@@ -1,7 +1,7 @@
 %% Rankine Hirn reheat 1
 optionsST.nsout = 0;   %  [-] : Number of feed-heating
 optionsST.reheat  = 1; %  [-] : Number of reheating
-optionsST.T_max = 560; %  [°C] : Maximum steam temperature
+optionsST.T_max = 525; %  [°C] : Maximum steam temperature
 optionsST.T_cond_out = 33; %  [°C] : Condenseur cold outlet temperature
 optionsST.p3_hp = 80;    %  [bar] : Maximum pressure
 %   -options.drumFlag  [-] : if =1 then drum if =0 => no drum.
