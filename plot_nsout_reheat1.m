@@ -41,25 +41,31 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout)
         linT56 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP56,linS56);
         
         %plot refroidissement isobare et condens soutirage 6-7
-        linS67 = zeros(nsout,1000);
-        linT67 = zeros(nsout,1000);
-        for i=1:nsout
-            linS67(i,:) = linspace(DAT(4,8+i),dat7(4,i),1000);
-            linT67(i,:) = arrayfun( @(s) XSteam('T_ps',dat7(2,i),s),linS67(i,:));
-        end
+%         linS67 = zeros(nsout,1000);
+%         linT67 = zeros(nsout,1000);
+%         for i=1:nsout
+%             linS67(i,:) = linspace(DAT(4,8+i),dat7(4,i),1000);
+%             linT67(i,:) = arrayfun( @(s) XSteam('T_ps',dat7(2,i),s),linS67(i,:));
+%         end
        
         
         %detente isenthalpique 7-10
         
-        %plot condens
-        linS61 = linspace(DAT(4,1),DAT(4,8),1000);
-        linT61 = DAT(1,8)*ones(1,1000);
+        %plot condens 6-7
+        linS67 = [DAT(4,8) DAT(4,9+nsout)];
+        linT67 = [DAT(1,8) DAT(1,9+nsout)];
         
+        %plot passage pompe Pe 7-8
+        linS78 = [DAT(4,9+nsout) DAT(1,10+nsout)];
+        linT78 = [DAT(1,9+nsout) DAT(1,10+nsout)];
+        %plot chauffage flux principale 8-7d
+        %linS907 DAT(:,11+nsout)
         %plot 
-        plot([linS13 linS34 linS45 linS56 linS61],[linT13 linT34 linT45 linT56 linT61],'r')
-        plot(DAT(4,:),DAT(1,:),'x')
+        plot([linS13 linS34 linS45 linS56 linS67 linS78],[linT13 linT34 linT45 linT56 linT67 linT78],'r')
+        plot(DAT(4,1:8),DAT(1,1:8),'*')
+        plot(linS67,linT67,'linewidth',2)
         %plot Soutirage
-        plot(linS67',linT67)
+        plot(linS67,linT67)
         hold off
 %% Diagramme h-s
         FIG(2) = figure;
@@ -79,9 +85,9 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout)
         linH45 = arrayfun( @(s) XSteam('h_ps',DAT(2,6),s),linS45);
         
         %plot condens 6-1
-        linH61 = arrayfun( @(s) XSteam('h_ps',DAT(2,1),s),linS61);
+        linH61 = arrayfun( @(s) XSteam('h_ps',DAT(2,1),s),linS67);
         
         %plot
         plot(DAT(4,:),DAT(3,:),'x')
-        plot([linS13 linS34 linS45 linS56 linS61],[linH13 linH34 linH45 linH56 linH61],'r')
+        plot([linS13 linS34 linS45 linS56 linS67],[linH13 linH34 linH45 linH56 linH61],'r')
 end

@@ -295,6 +295,21 @@ e_21= exergie(h_22,s_22);
 x_21= 0;
 %%%%%%%%%%%%%%%% Si resurchauffe %%%%%%%%%%%%%%%
 if reheat == 1
+    
+    %%%%%%%%%%%%%%% ETAT 50 %%%%%%%%%%%%%%%
+    % Entree de la turbine MP dans le cas d'une resurchauffe
+    T_50 = T_30;
+    %%%%trouver la p_3 la plus optimale
+    if isfield(options,'p_3')
+        p_3 = options.p_3;
+    elseif isfield(options,'x4')
+        x_60= x4;
+        h_60 = XSteam('h_Tx',T_cond_out,x_60);
+        p_3 = fsolve(@(p) (XSteam('h_pT',p,T_50)-h_60)/(XSteam('h_pT',p,T_50)-XSteam('h_ps',p,XSteam('s_pT',p,T_50)))-eta_SiT_others,20,optimset('tolX',1));    
+    else
+        p_3 = 0.14*p_30;
+    end
+    
     %%%%%%%%%%%%%%% ETAT 40 %%%%%%%%%%%%%%%
     % Sortie de la turbine HP dans cas d'une resurchauffe
     p_40 = p_3; % car surchauffe isobare
@@ -307,18 +322,6 @@ if reheat == 1
     x_40 = XSteam('x_ps',p_40,s_40);
     T_40 = XSteam('T_ph',p_40,h_40);
     e_40 = exergie(h_40,s_40);
-    
-    %%%%%%%%%%%%%%% ETAT 50 %%%%%%%%%%%%%%%
-    % Entree de la turbine MP dans le cas d'une resurchauffe
-    T_50 = T_30;
-    %%%%trouver la p_3 la plus optimale
-    if isfield(options,'p_3')
-        p_3 = options.p_3;
-    else
-        x_60= x4;
-        h_60 = XSteam('h_Tx',T_cond_out,x_60);
-        p_3 = fsolve(@(p) (XSteam('h_pT',p,T_50)-h_60)/(XSteam('h_pT',p,T_50)-XSteam('h_ps',p,XSteam('s_pT',p,T_50)))-eta_SiT_others,10);
-    end
     
     p_50 = p_3; %la pression apres la resurchauffe
     
@@ -393,16 +396,16 @@ elseif nsout>0
     %%%%test h_60 au lieu de h_60s
     h6_temp = linspace(h_60,h_50,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
     h6 = h6_temp(2:length(h6_temp)-1);
-    s_60 = s_50;
-    p6s = arrayfun( @(h) XSteam('p_hs',h,s_60),h6);
+    s_60s = s_50;
+    p6s = arrayfun( @(h) XSteam('p_hs',h,s_60s),h6);
     
     p6 = p6s; %hypothese
     h6 = h_50-eta_SiT_others*(h_50-h6);
     %x_60 = x_40;
-    T6 = arrayfun( @(h) XSteam('T_hs',h,s_60),h6);
+    T6 = arrayfun( @(h) XSteam('T_hs',h,s_60s),h6);
     x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
     s6 = arrayfun( @(p,t) XSteam('s_pT',p,t),p6,T6);
-    e6 = exergie(h6,s_60);
+    e6 = exergie(h6,s_60s);
     % l'echangeur en sortie de HP a son etat deja defini
     h6 = [h6 h_40];
     p6 = [p6 p_40];
@@ -468,6 +471,8 @@ elseif nsout>0
     
     %%%%%%%%% Calcul des etat 9x %%%%%%%%
     T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
+    h9(d)=h7(d)+eta_SiC*( XSteam('h_ps',p_10,s7(d)) - h7(d));
+    T9(d) = XSteam('T_ph',p_10,h9(d));
     p9 = [p_degaz*ones(1,d-1) p_10*ones(1,nsout-d+1)]; % avant bache, p9i = p_degaz, apres bache p9i = p_10
     h9 = arrayfun( @(p,t) XSteam('h_pT',p,t),p9,T9);
     s9 = arrayfun( @(p,t) XSteam('s_pT',p,t),p9,T9);
@@ -773,7 +778,7 @@ if display == 1
         if nsout == 0
             FIG(1:2) = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
         else
-            FIG(1:2) = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
+            FIG(1:2) = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout);
             %FIG = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout);
         end
     end

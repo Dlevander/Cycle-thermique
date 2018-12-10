@@ -23,7 +23,7 @@ optionsST.comb.lambda = 1.05;%  [-] : air excess
 %       -comb.y        [-] : the ratio H_y/C. Example 1.2 in CH_1.2O_0.05
 optionsST.T_exhaust = 120; % [C] : Temperature of exhaust gas out of the chimney
 %optionsST.p_3 = 62; %      [-] : High pressure after last reheating
-optionsST.x4 = 0.89; %        [-] : Vapor ratio [gaseous/liquid] (in french : titre)
+optionsST.x4 = 0.9; %        [-] : Vapor ratio [gaseous/liquid] (in french : titre)
 %   -options.T_0       [C] : Reference temperature
 optionsST.TpinchSub = 4;%[C] : Temperature pinch at the subcooler
 optionsST.TpinchEx = 15; %  [C] : Temperature pinch at a heat exchanger
