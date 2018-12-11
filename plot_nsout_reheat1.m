@@ -1,4 +1,4 @@
-function [FIG] = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout)
+function [FIG] = plot_nsout_reheat1(DAT,dat7,d,eta_SiT_HP,eta_SiT_others,nsout)
         close all
         T = linspace(0,400,400);
         SL = arrayfun( @(t) XSteam('sL_T',t),T);
@@ -16,9 +16,9 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout)
         %cloche de base
         plot(SL,T,'-b',SV,T,'-b')
         
-        %plot isobare 1 - 3
-        linS13 = linspace(DAT(4,1),DAT(4,5),1000);% linspace(DAT(4,2),DAT(4,3),1000) linspace(DAT(4,3),DAT(4,4),1000) linspace(DAT(4,4),DAT(4,5),1000) linspace(DAT(4,5),DAT(4,6),100)];
-        linT13 = arrayfun( @(s) XSteam('T_ps',DAT(2,2),s),linS13);
+        %plot isobare 2 - 3
+        linS23 = linspace(DAT(4,2),DAT(4,5),1000);
+        linT23 = arrayfun( @(s) XSteam('T_ps',DAT(2,2),s),linS23);
         
         %plot detente 3 - 4
         linP34 = linspace(DAT(2,5),DAT(2,6),1000);
@@ -40,6 +40,32 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout)
         linS56 = arrayfun( @(p,h) XSteam('s_ph',p,h),linP56,linH56);
         linT56 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP56,linS56);
         
+        %plot condens 60-70
+        linS6070 = [DAT(4,8) DAT(4,9+nsout)];
+        linT6070 = [DAT(1,8) DAT(1,9+nsout)];
+        
+        %plot passage pompe Pe 7-8
+        linS7080 = [DAT(4,9+nsout) DAT(4,10+nsout)];
+        linT7080 = [DAT(1,9+nsout) DAT(1,10+nsout)];
+        
+        %plot chauffage flux principale 8-9d-1
+        linS89d_1 = linspace(DAT(4,10+nsout),dat7(4,d),1000);
+        linT89d_1 = arrayfun( @(s) XSteam('T_ps',DAT(2,12+nsout+d-1),s),linS89d_1);
+        
+        %plot bache degaz
+        
+        %plot Pompe Pb 7d-9d
+        linS7d9d = [dat7(4,d) DAT(4,12+nsout+d+1)];
+        linT7d9d = [dat7(1,d) DAT(1,12+nsout+d+1)];
+        
+        %plot chauffage flux principale 9d-1
+        linS9d1 = linspace(DAT(4,12+nsout+d-1),DAT(4,1),1000);
+        linT9d1 = arrayfun( @(s) XSteam('T_ps',DAT(2,1),s),linS9d1);
+        
+        %plot Pompe Pa 1-2
+        linS12 = [DAT(4,1) DAT(4,2)];
+        linT12 = [DAT(1,1) DAT(1,2)]; 
+        
         %plot refroidissement isobare et condens soutirage 6-7
         linS67 = zeros(nsout,1000);
         linT67 = zeros(nsout,1000);
@@ -51,43 +77,43 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout)
         
         %detente isenthalpique 7-10
         
-        %plot condens 6-7
-        linS67 = [DAT(4,8) DAT(4,9+nsout)];
-        linT67 = [DAT(1,8) DAT(1,9+nsout)];
         
-        %plot passage pompe Pe 7-8
-        linS78 = [DAT(4,9+nsout) DAT(1,10+nsout)];
-        linT78 = [DAT(1,9+nsout) DAT(1,10+nsout)];
-        %plot chauffage flux principale 8-7d
-        %linS907 DAT(:,11+nsout)
         %plot 
-        plot([linS13 linS34 linS45 linS56 linS67 linS78],[linT13 linT34 linT45 linT56 linT67 linT78],'r')
+        plot([linS23 linS34 linS45 linS56],[linT23 linT34 linT45 linT56],'r')
+        %plot([linS6070 linS78 linS7d9d linS12],[linT6070 linT78 linT7d9d linT12],'k');
+        plot([linS6070 linS7080],[linT6070 linT7080],'r');
+        
+        plot(linS89d_1,linT89d_1,'c')
+        plot(linS7d9d,linT7d9d,'g');
+        plot(linS9d1,linT9d1,'k');
+        plot(linS12,linT12,'m');
+     
         plot(DAT(4,:),DAT(1,:),'*')
-        plot(linS67,linT67,'linewidth',2)
+        %plot(linS67,linT67,'linewidth',2)
         %plot Soutirage
-        plot(linS67,linT67)
+        %plot(linS67,linT67)
         hold off
 %% Diagramme h-s
-        FIG(2) = figure;
-        hold on
-        grid on
-        title('Diagramme h-s')
-        xlabel('s [kj/kg K]')
-        ylabel('h [kj/kg]')
-        
-        %cloche de base
-        plot(SL,HL,'-b',SV,HV,'-b')
-        
-        %plot isobare 1 a 3
-        linH13 = arrayfun( @(s) XSteam('h_ps',DAT(2,5),s),linS13);
-        
-        %plot reheat 4-5
-        linH45 = arrayfun( @(s) XSteam('h_ps',DAT(2,6),s),linS45);
-        
-        %plot condens 6-1
-        linH61 = arrayfun( @(s) XSteam('h_ps',DAT(2,1),s),linS67);
-        
-        %plot
-        plot(DAT(4,:),DAT(3,:),'x')
-        plot([linS13 linS34 linS45 linS56 linS67],[linH13 linH34 linH45 linH56 linH61],'r')
+%         FIG(2) = figure;
+%         hold on
+%         grid on
+%         title('Diagramme h-s')
+%         xlabel('s [kj/kg K]')
+%         ylabel('h [kj/kg]')
+%         
+%         %cloche de base
+%         plot(SL,HL,'-b',SV,HV,'-b')
+%         
+%         %plot isobare 1 a 3
+%         linH13 = arrayfun( @(s) XSteam('h_ps',DAT(2,5),s),linS13);
+%         
+%         %plot reheat 4-5
+%         linH45 = arrayfun( @(s) XSteam('h_ps',DAT(2,6),s),linS45);
+%         
+%         %plot condens 6-1
+%         linH61 = arrayfun( @(s) XSteam('h_ps',DAT(2,1),s),linS67);
+%         
+%         %plot
+%         plot(DAT(4,:),DAT(3,:),'x')
+%         plot([linS13 linS34 linS45 linS56 linS61],[linH13 linH34 linH45 linH56 linH61],'r')
 end

@@ -447,7 +447,7 @@ elseif nsout>0
     %Apres la pompe Pe, de rendement isentropique option.eta_SiC
     p_80 = p_degaz ;
     h_80s = XSteam('h_ps',p_80,s_70); %h dans le cas isentropique
-    h_80=h_70+eta_SiC*(h_80s-h_70);%h en prenant compte rendement is
+    h_80=h_70+(h_80s-h_70)/eta_SiC;%h en prenant compte rendement is
     s_80=XSteam('s_ph',p_80,h_80);
     T_80=XSteam('T_ph',p_80,h_80);
     x_80=XSteam('x_ph',p_80,h_80);
@@ -474,7 +474,7 @@ elseif nsout>0
     h9 = zeros(1,nsout);
     
     T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
-    h9(d)=h7(d)+eta_SiC*( XSteam('h_ps',p_10,s7(d)) - h7(d));
+    h9(d)=h7(d)+( XSteam('h_ps',p_10,s7(d)) - h7(d))/eta_SiC;
     T9(d) = XSteam('T_ph',p_10,h9(d));
     p9 = [p_degaz*ones(1,d-1) p_10*ones(1,nsout-d+1)]; % avant bache, p9i = p_degaz, apres bache p9i = p_10
     h9(1:d-1) = arrayfun( @(p,t) XSteam('h_pT',p,t),p9(1:d-1),T9(1:d-1));
@@ -782,18 +782,18 @@ if display == 1
         if nsout == 0
             FIG(1:2) = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
         else
-            FIG(1:2) = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout);
+            FIG(1:2) = plot_nsout_reheat1(DAT,dat7,d,eta_SiT_HP,eta_SiT_others,nsout);
             %FIG = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout);
         end
     end
-    FIG(3)= figure;
-    label_en = {['Puissance effective: ',num2str(P_e*1e-3,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(Per_meca*1e-3,'%.1f'),'[MW]'],['Pertes Condenseur: ',num2str(Per_cond*1e-3,'%.1f'),'[MW]'],['Pertes generateur de vapeur: ',num2str(Per_boiler*1e-3,'%.1f'),'[MW]']};
-    pie([P_e;DATEN(2:3);DATEN(1)],label_en)
-    title(['Puissance energetique primaire: ' num2str(Pu_tot*1e-3,'%.1f'),'[MW]'])
-    FIG(4) = figure;
-    label_ex = {['Puissance effective: ',num2str(P_e*1e-3,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(Per_meca*1e-3,'%.1f'),'[MW]'],['Pertes Condenseur: ',num2str(perte_condex*1e-3,'%.1f'),'[MW]'],['Irreversibilites a la turbine et aux pompes: ',num2str(perte_turbex*1e-3,'%.1f'),'[MW]'],['Irreversibilites du au transfert de chaleur a la chaudiere: ',num2str(perte_transex*1e-3,'%.1f'),'[MW]'],['Pertes a la cheminee: ',num2str(perte_chemex*1e-3,'%.1f'),'[MW]'],['Irreversibilite de la combustion: ',num2str(perte_combex*1e-3,'%.1f'),'[MW]']};
-    pie([P_e;DATEX(1);DATEX(3:7)],label_ex)
-    title(['Flux d''exergie primaire: ' num2str(P_totex*1e-3,'%.1f'),'[MW]'])
+%     FIG(3)= figure;
+%     label_en = {['Puissance effective: ',num2str(P_e*1e-3,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(Per_meca*1e-3,'%.1f'),'[MW]'],['Pertes Condenseur: ',num2str(Per_cond*1e-3,'%.1f'),'[MW]'],['Pertes generateur de vapeur: ',num2str(Per_boiler*1e-3,'%.1f'),'[MW]']};
+%     pie([P_e;DATEN(2:3);DATEN(1)],label_en)
+%     title(['Puissance energetique primaire: ' num2str(Pu_tot*1e-3,'%.1f'),'[MW]'])
+%     FIG(4) = figure;
+%     label_ex = {['Puissance effective: ',num2str(P_e*1e-3,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(Per_meca*1e-3,'%.1f'),'[MW]'],['Pertes Condenseur: ',num2str(perte_condex*1e-3,'%.1f'),'[MW]'],['Irreversibilites a la turbine et aux pompes: ',num2str(perte_turbex*1e-3,'%.1f'),'[MW]'],['Irreversibilites du au transfert de chaleur a la chaudiere: ',num2str(perte_transex*1e-3,'%.1f'),'[MW]'],['Pertes a la cheminee: ',num2str(perte_chemex*1e-3,'%.1f'),'[MW]'],['Irreversibilite de la combustion: ',num2str(perte_combex*1e-3,'%.1f'),'[MW]']};
+%     pie([P_e;DATEX(1);DATEX(3:7)],label_ex)
+%     title(['Flux d''exergie primaire: ' num2str(P_totex*1e-3,'%.1f'),'[MW]'])
 end
 
 end
