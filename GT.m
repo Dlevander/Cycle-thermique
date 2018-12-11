@@ -1,4 +1,4 @@
-function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION] = GT(P_e,options,display)
+function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION FIG] = GT(P_e,options,display)
 % GT Gas turbine modelisation
 % GT(P_e,options,display) compute the thermodynamics states for a Gas
 % turbine based on several inputs (given in OPTION) and based on a given 
