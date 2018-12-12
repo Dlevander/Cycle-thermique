@@ -450,11 +450,9 @@ elseif nsout>0
     %%%%%%%%% Calcul etat  10 %%%%%%%%%%
     T_10 = T7(length(T7))-TpinchEx;
     %p_10 = XSteam('psat_T',T_10); % hypothese 1: point sur la cloche
-    %h_10 = XSteam('hL_T',T_10);
-    %s_10 = XSteam('sL_T',T_10);
-    p_10 = p_degaz + (p_21 - p_degaz)/2; % hypothese 2: point pas sur la cloche
-    h_10 = XSteam('h_pT',p_10,T_10);
-    s_10 = XSteam('s_pT',p_10,T_10);
+    p_10 = p_degaz + (p_21 - p_degaz)/2; % hypothese 2
+    h_10 = XSteam('hL_T',T_10);
+    s_10 = XSteam('sL_T',T_10);
     x_10 = XSteam('x_ph',p_10,h_10);
     e_10 = exergie(h_10,s_10);
     
