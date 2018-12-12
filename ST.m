@@ -132,12 +132,6 @@ else
     T_max = 525.0;  % [C]
 end
 
-if isfield(options,'T_cond_out')
-    T_cond_out = options.T_cond_out;
-else
-    T_cond_out = 33.0 ;  % [C]
-end
-
 if isfield(options,'p3_hp')
     p3_hp = options.p3_hp;
 else
@@ -190,12 +184,6 @@ else
     T_exhaust = 120.0;  % [C]
 end
 
-if isfield(options,'p_3')
-    p_3 = options.p_3;
-else
-    p_3 = 15;  % [bar]
-end
-
 if isfield(options,'x4')
     x4 = options.x4;
 else
@@ -224,6 +212,12 @@ if isfield(options,'TpinchCond')
     TpinchCond= options.TpinchCond;
 else
     TpinchCond = 15.0;  % [C]
+end
+
+if isfield(options,'T_cond_out')
+    T_cond_out = options.T_cond_out;
+else
+    T_cond_out = T_0+TpinchCond;  % [C]
 end
 
 if isfield(options,'Tdrum')
@@ -314,7 +308,6 @@ if reheat == 1
     % Sortie de la turbine HP dans cas d'une resurchauffe
     p_40 = p_3; % car surchauffe isobare
     s_40s = s_30;
-    x_40s = XSteam('x_ps',p_40,s_40s);
     h_40s = XSteam('h_ps',p_40,s_40s);
     
     h_40 = h_30 - eta_SiT_HP * (h_30-h_40s);
@@ -458,7 +451,7 @@ elseif nsout>0
     p_10 = p_degaz + (p_21 - p_degaz)/3; % hypothese
     h_10 = XSteam('hL_T',T_10);
     s_10 = XSteam('sL_T',T_10);
-    x_10 = NaN;
+    x_10 = XSteam('x_ph',p_10,h_10);
     e_10 = exergie(h_10,s_10);
     
     %%%%%%%%% Calcul etat  20 %%%%%%%%%%
@@ -474,7 +467,8 @@ elseif nsout>0
     h9 = zeros(1,nsout);
     
     T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
-    h9(d)=h7(d)+( XSteam('h_ps',p_10,s7(d)) - h7(d))/eta_SiC;
+    h9ds = XSteam('h_ps',p_10,s7(d));
+    h9(d)=h7(d)+(h9ds - h7(d))/eta_SiC;
     T9(d) = XSteam('T_ph',p_10,h9(d));
     p9 = [p_degaz*ones(1,d-1) p_10*ones(1,nsout-d+1)]; % avant bache, p9i = p_degaz, apres bache p9i = p_10
     h9(1:d-1) = arrayfun( @(p,t) XSteam('h_pT',p,t),p9(1:d-1),T9(1:d-1));
@@ -492,14 +486,25 @@ elseif nsout>0
     x_100 = XSteam('x_ph',p_100,T_100);
     e_100 = exergie(h_100,s_100);
     
+    %%%%%%%%% Calcul etat 10x %%%%%%%%%%
+    %etat apres les vannes de detentes suivant les etats 7x correspondant
+    %pas de vanne entre l'etat 71 et R0 etat 101 = etat 71
+    %vannes isenthalpique
+    h10 = h7; %etat 10d = etat 7d
+    p10 = [p7(1) p7(1:d-2) p7(d) p7(d:nsout-1)];
+    s10 = arrayfun(@(p,h) XSteam('s_ph',p,h),p10,h10);
+    T10 = arrayfun(@(p,h) XSteam('T_ph',p,h),p10,h10);
+    x10 = arrayfun(@(p,h) XSteam('x_ph',p,h),p10,h10);
+    e10 = exergie(h10,s10);
+    
     %%%%%%%%% Calcul etat  110 %%%%%%%%%%
     %etat apres la vanne (isenthalpique), juste avant le condenseur
     h_110 = h_100;
     T_110 = T_70;
     p_110 = p_70;
-    s_110 = XSteam('s_pT',p_110,T_110);
+    s_110 = XSteam('s_ph',p_110,h_110);
     x_110 = XSteam('x_ph',p_110,T_110);
-    e_100 = exergie(h_110,s_110);
+    e_110 = exergie(h_110,s_110);
     %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
     
     [X,h_90] = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
@@ -532,6 +537,9 @@ elseif reheat == 1
         DAT(:,9:8+nsout) = [T6;p6;h6;s6;e6;x6];
         DAT(:,9+nsout) = [T_70 p_70 h_70 s_70 e_70 x_70]';
         dat7 = [T7;p7;h7;s7;e7;x7];
+        dat10 = [T10;p10;h10;s10;e10;x10];
+        dat100 = [T_100 p_100 h_100 s_100 e_100 x_100]';
+        dat110 = [T_110 p_110 h_110 s_110 e_110 x_110]';
         DAT(:,10+nsout) = [T_80 p_80 h_80 s_80 e_80 x_80]';
         DAT(:,11+nsout) = [T_90 p_90 h_90 s_90 e_90 x_90]';
         DAT(:,12+nsout:11+2*nsout) = [T9;p9;h9;s9;e9;x9];
@@ -591,17 +599,6 @@ end
 
 % m_vap    debit massique de vapeur
 m_vap = P_e/(eta_mec*(W_mT-W_mP)); %page 60
-XMASSFLOW = X;%*m_vap;
-%%%%%%%% Combustion  %%%%%%
-%%determination des fractions massiques des fumees
-if isfield(options,'lambda')
-    if isfield(options.comb,'lambda')
-        lambda = options.comb.lambda ;
-        [x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T_0,Tmax,lambda);
-    end
-else
-        [x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T_0,Tmax,0);
-end
 
 %%Calcul Cp moyen des fumees
 T_exh = T_exhaust;%T en sortie de cheminee
@@ -609,8 +606,21 @@ TK_exh = T_exh+273.15;
 TK_0 = T_0+273.15; % temperature de reference
 if TK_0 < 300
     TK_janaf = 300; %janaf ne commence qua partir de 27 deg celsius
+    T_janaf = 26.85;
 else
     TK_janaf = TK_0;
+    T_janaf = T_0;
+end
+
+%%%%%%%% Combustion  %%%%%%
+%%determination des fractions massiques des fumees
+if isfield(options,'lambda')
+    if isfield(options.comb,'lambda')
+        lambda = options.comb.lambda ;
+        [x_N2,x_O2,x_CO2,x_H2O,~,lambda,ma1,LHV,e_c] = combustion(x,y,T_janaf,Tmax,lambda);
+    end
+else
+        [x_N2,x_O2,x_CO2,x_H2O,~,lambda,ma1,LHV,e_c] = combustion(x,y,T_janaf,Tmax,0);
 end
 
 %%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
@@ -727,7 +737,7 @@ MASSFLOW(2) = m_vap;
 MASSFLOW(3) = m_comb;
 MASSFLOW(4) = m_fum;
 
-XMASSFLOW = X*m_vap;
+XMASSFLOW = X;%*m_vap;
 
 COMBUSTION.LHV = LHV;
 COMBUSTION.e_c = e_c;
@@ -750,7 +760,7 @@ if display == 1
         if nsout == 0
             FIG(1:2) = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
         else
-            FIG(1:2) = plot_nsout_reheat1(DAT,dat7,d,eta_SiT_HP,eta_SiT_others,nsout);
+            FIG(1:2) = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,d,eta_SiT_HP,eta_SiT_others,nsout);
             %FIG = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout);
         end
     end

@@ -1,6 +1,6 @@
 function [X,h_90] = Soutirage(h6,h7,h_80,h9,h_100,nsout,d)
 % resolution iterative du systeme de n equation a n inconnues
-h_90_new = 20; % valeur initiale de h_90
+h_90_new = h_80; % valeur initiale de h_90
 err = 10000;
 deltaH76 = diag(h7-h6);
 deltaH7 = h7(1:nsout-1)-h7(2:nsout);

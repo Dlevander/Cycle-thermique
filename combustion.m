@@ -14,7 +14,7 @@ elseif x == 0 && y == 8/3
     LHV = 46465; % [kJ/kg]
 end
 ma1 = (32+3.76*28.15)*(1+(y/4))/(12.01+1.008*y); % pouvoir comburivore [kg_air_stoech/kg_comb]
-% %% Détermination de lambda%%
+% %% Determination de lambda%%
 if lambda==0
 cp_CH4 = 2.44*1000; %cp methane a 15C, trouve sur internet J/kg*K
 b2 = y/2; %pg 26 cours combu

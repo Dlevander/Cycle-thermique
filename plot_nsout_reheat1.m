@@ -1,4 +1,4 @@
-function [FIG] = plot_nsout_reheat1(DAT,dat7,d,eta_SiT_HP,eta_SiT_others,nsout)
+function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,d,eta_SiT_HP,eta_SiT_others,nsout)
         close all
         T = linspace(0,400,400);
         SL = arrayfun( @(t) XSteam('sL_T',t),T);
@@ -16,6 +16,10 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,d,eta_SiT_HP,eta_SiT_others,nsout)
         %cloche de base
         plot(SL,T,'-b',SV,T,'-b')
         
+        %plot Pompe Pa 1-2
+        linS12 = [DAT(4,1) DAT(4,2)];
+        linT12 = [DAT(1,1) DAT(1,2)];
+        
         %plot isobare 2 - 3
         linS23 = linspace(DAT(4,2),DAT(4,5),1000);
         linT23 = arrayfun( @(s) XSteam('T_ps',DAT(2,2),s),linS23);
@@ -32,88 +36,104 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,d,eta_SiT_HP,eta_SiT_others,nsout)
         linS45 = linspace(DAT(4,6),DAT(4,7),1000);
         linT45 = arrayfun( @(s) XSteam('T_ps',DAT(2,6),s),linS45);
         
-        %plot detente 5-6
-        linP56 = linspace(DAT(2,7),DAT(2,8),1000);
-        linS56s = DAT(4,7)*ones(1,1000);
-        linH56s = arrayfun( @(p,s) XSteam('h_ps',p,s),linP56,linS56s);
-        linH56 = DAT(3,7) - eta_SiT_others * (DAT(3,7)-linH56s);
-        linS56 = arrayfun( @(p,h) XSteam('s_ph',p,h),linP56,linH56);
-        linT56 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP56,linS56);
+        %plot detente 5-60
+        linP560 = linspace(DAT(2,7),DAT(2,8),1000);
+        linS560s = DAT(4,7)*ones(1,1000);
+        linH560s = arrayfun( @(p,s) XSteam('h_ps',p,s),linP560,linS560s);
+        linH560 = DAT(3,7) - eta_SiT_others * (DAT(3,7)-linH560s);
+        linS560 = arrayfun( @(p,h) XSteam('s_ph',p,h),linP560,linH560);
+        linT560 = arrayfun( @(p,s) XSteam('T_ps',p,s),linP560,linS560);
         
         %plot condens 60-70
         linS6070 = [DAT(4,8) DAT(4,9+nsout)];
         linT6070 = [DAT(1,8) DAT(1,9+nsout)];
         
-        %plot passage pompe Pe 7-8
-        linS7080 = [DAT(4,9+nsout) DAT(4,10+nsout)];
-        linT7080 = [DAT(1,9+nsout) DAT(1,10+nsout)];
+        %plot sortie condenseur a entree pompe alim 70-1
+        linS701 = DAT(4,9+nsout:11+2*nsout);
+        linT701 = DAT(1,9+nsout:11+2*nsout); 
         
-        %plot chauffage flux principale 8-9d-1
-        linS89d_1 = linspace(DAT(4,10+nsout),dat7(4,d),1000);
-        linT89d_1 = arrayfun( @(s) XSteam('T_ps',DAT(2,12+nsout+d-1),s),linS89d_1);
-        
-        %plot bache degaz
-        
-        %plot Pompe Pb 7d-9d
-        linS7d9d = [dat7(4,d) DAT(4,12+nsout+d+1)];
-        linT7d9d = [dat7(1,d) DAT(1,12+nsout+d+1)];
-        
-        %plot chauffage flux principale 9d-1
-        linS9d1 = linspace(DAT(4,12+nsout+d-1),DAT(4,1),1000);
-        linT9d1 = arrayfun( @(s) XSteam('T_ps',DAT(2,1),s),linS9d1);
-        
-        %plot Pompe Pa 1-2
-        linS12 = [DAT(4,1) DAT(4,2)];
-        linT12 = [DAT(1,1) DAT(1,2)]; 
-        
-        %plot refroidissement isobare et condens soutirage 6-7
+        %plot refroidissement isobare et condens Soutirage 6-7
         linS67 = zeros(nsout,1000);
         linT67 = zeros(nsout,1000);
+        linH67 = zeros(nsout,1000);
+        linS710 = zeros(nsout,2);
+        linT710 = zeros(nsout,2);
+        linH710 = zeros(nsout,2);
         for i=1:nsout
             linS67(i,:) = linspace(DAT(4,8+i),dat7(4,i),1000);
             linT67(i,:) = arrayfun( @(s) XSteam('T_ps',dat7(2,i),s),linS67(i,:));
+            linH67(i,:) = arrayfun( @(s) XSteam('h_ps',dat7(2,i),s),linS67(i,:));
+            %plot Soutirage detente isenthalpique 7-10
+            linS710(i,:) = [dat7(4,i) dat10(4,i)];
+            linT710(i,:) = [dat7(1,i) dat10(1,i)];
+            linH710(i,:) = [dat7(3,i) dat10(3,i)];
         end
-       
-        
-        %detente isenthalpique 7-10
-        
+       %plot detente entre etat 100 et 110
+       linS100110 = [dat100(4) dat110(4)];
+       linT100110 = [dat100(1) dat110(1)];
         
         %plot 
-        plot([linS23 linS34 linS45 linS56],[linT23 linT34 linT45 linT56],'r')
-        %plot([linS6070 linS78 linS7d9d linS12],[linT6070 linT78 linT7d9d linT12],'k');
-        plot([linS6070 linS7080],[linT6070 linT7080],'r');
-        
-        plot(linS89d_1,linT89d_1,'c')
-        plot(linS7d9d,linT7d9d,'g');
-        plot(linS9d1,linT9d1,'k');
-        plot(linS12,linT12,'m');
-     
+        plot(linS12,linT12,'r');
+        plot([linS23 linS34 linS45 linS560],[linT23 linT34 linT45 linT560],'r');
+        plot(linS6070,linT6070,'r');
+        plot(linS701,linT701,'r');
+        %plot point
         plot(DAT(4,:),DAT(1,:),'*')
-        %plot(linS67,linT67,'linewidth',2)
         %plot Soutirage
-        %plot(linS67,linT67)
+        linSoutS = [linS67 linS710]';
+        linSoutT = [linT67 linT710]';
+        plot(linSoutS,linSoutT);
+        %plot detente vanne apres subcooler
+        plot(linS100110,linT100110,'linewidth',3);
         hold off
 %% Diagramme h-s
-%         FIG(2) = figure;
-%         hold on
-%         grid on
-%         title('Diagramme h-s')
-%         xlabel('s [kj/kg K]')
-%         ylabel('h [kj/kg]')
-%         
-%         %cloche de base
-%         plot(SL,HL,'-b',SV,HV,'-b')
-%         
-%         %plot isobare 1 a 3
-%         linH13 = arrayfun( @(s) XSteam('h_ps',DAT(2,5),s),linS13);
-%         
-%         %plot reheat 4-5
-%         linH45 = arrayfun( @(s) XSteam('h_ps',DAT(2,6),s),linS45);
-%         
-%         %plot condens 6-1
-%         linH61 = arrayfun( @(s) XSteam('h_ps',DAT(2,1),s),linS67);
-%         
-%         %plot
-%         plot(DAT(4,:),DAT(3,:),'x')
-%         plot([linS13 linS34 linS45 linS56 linS61],[linH13 linH34 linH45 linH56 linH61],'r')
+        FIG(2) = figure;
+        hold on
+        grid on
+        title('Diagramme h-s')
+        xlabel('s [kj/kg K]')
+        ylabel('h [kj/kg]')
+        
+        %cloche de base
+        plot(SL,HL,'-b',SV,HV,'-b')
+        
+        %plot Pompe Alim 1-2
+        linH12 = [DAT(3,1) DAT(3,2)];
+        
+        %plot isobare 2-3
+        linH23 = arrayfun( @(s) XSteam('h_ps',DAT(2,5),s),linS23);
+        
+        %linH34 detente 3-4 fait ligne 31
+        
+        %plot reheat 4-5
+        linH45 = arrayfun( @(s) XSteam('h_ps',DAT(2,6),s),linS45);
+        
+        %linH34 detente 5-60 fait ligne 43
+        
+        %plot condens 60-70
+        linH6070 = [DAT(3,8) DAT(3,9+nsout)];
+
+        %plot sortie condenseur a entree pompe alim 70-1
+        linH701 = DAT(3,9+nsout:11+2*nsout);
+        
+        %plot refroidissement isobare et condens Soutirage 6-7 fait ligne 65 
+        
+        %plot Soutirage detente isenthalpique 7-10 fait ligne 69
+        
+        %plot detente isenthalpiuee etat 100 et 110
+        linH100110 = [dat100(3) dat110(3)];
+        
+        %plot
+        plot(linS12,linH12,'r');
+        plot([linS23 linS34 linS45 linS560],[linH23 linH34 linH45 linH560],'r');
+        plot(linS6070,linH6070,'r');
+        plot(linS701,linH701,'r');
+        %plot point
+        plot(DAT(4,:),DAT(3,:),'*')
+        %plot Soutirage
+        linSoutS = [linS67 linS710]';
+        linSoutH = [linH67 linH710]';
+        plot(linSoutS,linSoutH);
+        %plot detente vanne apres subcooler
+        plot(linS100110,linH100110,'linewidth',3);
 end
