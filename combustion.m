@@ -1,4 +1,4 @@
-function [x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T2,T3);
+function [x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T2,T3,lambda);
 
 Mm_O2 = 32*1e-3; %kg/mol
 Mm_CO2 = 44*1e-3;
@@ -15,7 +15,7 @@ elseif x == 0 && y == 8/3
 end
 ma1 = (32+3.76*28.15)*(1+(y/4))/(12.01+1.008*y); % pouvoir comburivore [kg_air_stoech/kg_comb]
 % %% Détermination de lambda%%
-
+if lambda==0
 cp_CH4 = 2.44*1000; %cp methane a 15C, trouve sur internet J/kg*K
 b2 = y/2; %pg 26 cours combu
 a2 = 1; % ???
@@ -35,7 +35,7 @@ w = Num/Denom; %w, coefficient stoech de l'air
 lambda = w/(1+y/4); %X=0 pour nous
 
 % lambda = 2.2864 ; % valeur quil faut atteindre pour lexemple bouquin p125 !!!
-
+end
 
 %%determination des fractions massiques des fumees
 
