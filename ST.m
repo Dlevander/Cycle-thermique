@@ -229,7 +229,7 @@ end
 if isfield(options,'Tdrum')
     Tdrum = options.Tdrum;
 else
-    Tdrum = 120.0;  % [°C]
+    Tdrum = 120.0;  % [Â°C]
 end
 
 if isfield(options,'eta_SiC')
@@ -542,7 +542,7 @@ X_tot = sum(X);
 %  ex_mT    exergie du travail moteur de la turbine [kJ/kg]
 %  W_mT     Travail moteur de la turbine
 %  Q_I      Action calorifique a la chaudiere [kJ/kg]
-%  ex_I     delta d' Exergie�a la chaudiere [kJ/kg]
+%  ex_I     delta d' Exergie a la chaudiere [kJ/kg]
 ex_mT = 0;
 if reheat == 0
     W_mT = h_30-h_60;
@@ -584,7 +584,7 @@ if  nsout ~= 0
         ex_mP = W_mP - T_0*(s_80-s_70 + s9(d) - s7(d) + s_20-s_10);
     end
     
-else % travail fourni aÃ‚Â  la pompe sans bache et sans soutirages
+else % travail fourni a la pompe sans bache et sans soutirages
     W_mP = (X_tot+1)*(h_20-h_10);
     ex_mP = W_mP - T_0*(s_20-s_10);
 end
@@ -594,46 +594,14 @@ m_vap = P_e/(eta_mec*(W_mT-W_mP)); %page 60
 XMASSFLOW = X;%*m_vap;
 %%%%%%%% Combustion  %%%%%%
 %%determination des fractions massiques des fumees
-
-if x == 0 && y == 4 % CH4 + 2*lambda*(O2+3.76N2) => 2*(lambda-1)*O2 + CO2 + 2*H2O + 2*lambda*3.76*N2
-    %Livre
-    LHV = 50150; % [kj/kg_comb]
-    e_c = 52215; %kJ/kg fuel exergy. tableau pg 25 du livre
-    MmComb = 16 ; %(kg/kmol)
-    % Fractions massiques des produits (kg/kg_comb)
-    x_O2 = 2*(lambda-1)*32/MmComb;
-    x_CO2 = 44/MmComb;
-    x_H2O = 2*18/MmComb;
-    x_N2 = 2*lambda*3.76*28/MmComb;
-    
-elseif x == 0 && y == 0 % C + lambda*(O2+3.76N2) => (lambda-1)*O2 + CO2 + lambda*3.76*N2  p131
-    LHV = 32780; % [kJ/kg]
-    MmComb = 12; %[kg/kmol]
-    e_c = 32400; %[kJ/kg]
-    % Fractions massiques des produits [kg/kg_comb]
-    x_O2 = (lambda-1)*32/MmComb;
-    x_CO2 = 44/MmComb;
-    x_H2O = 0;
-    x_N2 = lambda*3.76*28/MmComb;
-    
-elseif x == 0 && y == 8/3 % Propane : C3H8 + 5*lambda*(O2+3.76N2) => 5*(lambda-1)*O2 + 3*CO2 + 4*H2O + 5*lambda*3.76*N2
-    
-    LHV = 46465; % [kJ/kg]
-    MmComb = 44; %[kg/kmol]
-    e_c = 49045; %[kJ/kg]
-    % Fractions massiques des produits (kg/kg_comb)
-    x_O2 = 5*(lambda-1)*32/MmComb;
-    x_CO2 = 3*44/MmComb;
-    x_H2O = 4*18/MmComb;
-    x_N2 = 5*lambda*3.76*28/MmComb;
+if isfield(options,'lambda')
+    if isfield(options.comb,'lambda')
+        lambda = options.comb.lambda ;
+        [x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T_0,Tmax,lambda);
+    end
+else
+        [x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T_0,Tmax,0);
 end
-%on change les fractions massiques en (kg/kg_fumee)
-Sum = x_O2 + x_CO2 + x_H2O + x_N2 ;
-x_O2 = x_O2/Sum;
-x_CO2 = x_CO2/Sum;
-x_N2 = x_N2/Sum;
-x_H2O = x_H2O/Sum;
-ma1 = (32+3.76*28.15)*(1+(y/4))/(12.01+1.008*y); % pouvoir comburivore [kg_air_stoech/kg_comb]
 
 %%Calcul Cp moyen des fumees
 T_exh = T_exhaust;%T en sortie de cheminee
@@ -646,7 +614,7 @@ else
 end
 
 %%Calcul des enthalpies, entropies et exergies des fumees et du fuel+air
-%Enthalpie de l'air�a T_0
+%Enthalpie de l'air a T_0
 x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
 x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
 
