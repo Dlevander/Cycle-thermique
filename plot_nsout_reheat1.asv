@@ -1,11 +1,11 @@
-function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,eta_SiT_HP,eta_SiT_others,nsout)
+function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,d,eta_SiT_HP,eta_SiT_others,nsout)
         close all
         T = linspace(0,400,400);
         SL = arrayfun( @(t) XSteam('sL_T',t),T);
         SV = arrayfun( @(t) XSteam('sV_T',t),T);
         HL = arrayfun( @(t) XSteam('hL_T',t),T);
         HV = arrayfun( @(t) XSteam('hV_T',t),T);
-        Ttop = XSteam('T_hs',HL(374),SL(374));
+        Ttop = XSteam('T_hs',4.386891148174190,SV(374));
 %% Diagramme T-s
         FIG(1) = figure;
         hold on
@@ -18,7 +18,7 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,eta_SiT_HP,eta_
         cloche = [SL SV];
         Tcloche = [T T];
         plot(cloche,Tcloche,'-b');
-        plot([SL(374) SV(374)],[Ttop Ttop],'-b');
+        plot([4.386891148174190 SV(374)],[Ttop Ttop],'linewidth',3);
         %plot(SL,T,'-b',SV,T,'-b')
         
         %plot Pompe Pa 1-2
@@ -101,7 +101,7 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,eta_SiT_HP,eta_
         
         %cloche de base
         plot(SL,HL,'-b',SV,HV,'-b')
-        plot([SL(374) SV(374)],[HL(374) HV(374)],'-b');
+        
         %plot Pompe Alim 1-2
         linH12 = [DAT(3,1) DAT(3,2)];
         

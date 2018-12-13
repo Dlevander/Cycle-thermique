@@ -764,7 +764,7 @@ if display == 1
         if nsout == 0
             FIG(1:2) = plotRH_reheat1(DAT,eta_SiT_HP,eta_SiT_others);
         else
-            FIG(1:2) = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,d,eta_SiT_HP,eta_SiT_others,nsout);
+            FIG(1:2) = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,eta_SiT_HP,eta_SiT_others,nsout);
             %FIG = plot_nsout_reheat1(DAT,dat7,eta_SiT_HP,eta_SiT_others,nsout);
         end
     end
