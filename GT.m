@@ -248,6 +248,7 @@ pertes_echap=(m_g*e_3-m_a*e_2)-(m_g*(e_3-e_4)-m_a*(e_2-e_1));
 pertes_ExC =  ((h_2-h_1) - (e_2-e_1))*m_a; %Watts/sec
 pertes_ExT =  ((e_3-e_4) - (h_3-h_4))*m_g;
 pertes_rotex = pertes_ExC + pertes_ExT;
+pertes_echap = h_4*m_g;
 
 %% Remplissage vecteurs
 MASSFLOW(1) = m_a;
@@ -262,7 +263,7 @@ ETA(5) = eta_rotex;
 ETA(6) = eta_combex;
 
 DATEN(1) = pertes_mec/1000;
-DATEN(2) = 0; %??
+DATEN(2) = pertes_echap/1000;
 
 DATEX(1) = pertes_mec/1000;
 DATEX(2) = pertes_rotex/1000;
