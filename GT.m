@@ -242,4 +242,9 @@ pertes_cycle=Pprim*(1-eta_cyclex);
 pertes_comp_turb=(m_g*(e_3-e_4)-m_a*(e_2-e_1))-Pm;
 pertes_echap=(m_g*e_3-m_a*e_2)-(m_g*(e_3-e_4)-m_a*(e_2-e_1));
 
+
+if DISPLAY ==1
+plot_GT(DAT,eta_PiT,eta_PiC,R_air,x_CO2,x_H2O,x_O2,x_N2);
+plot_GT(DAT,eta_PiT,eta_PiC,R_fum,x_CO2,x_H2O,x_O2,x_N2);
+end
 end
