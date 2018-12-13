@@ -25,7 +25,7 @@ optionsST.T_exhaust = 120; % [C] : Temperature of exhaust gas out of the chimney
 %optionsST.p_3 = 62; %      [-] : High pressure after last reheating
 optionsST.x4 = 0.9; %        [-] : Vapor ratio [gaseous/liquid] (in french : titre)
 %   -options.T_0       [C] : Reference temperature
-optionsST.TpinchSub = 4;%[C] : Temperature pinch at the subcooler
+optionsST.TpinchSub = 8;%[C] : Temperature pinch at the subcooler
 optionsST.TpinchEx = 15; %  [C] : Temperature pinch at a heat exchanger
 optionsST.TpinchCond = 15; % [C] : Temperature pinch at condenser
 optionsST.Tdrum = 120; %    [C] : minimal drum temperature

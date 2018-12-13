@@ -14,7 +14,10 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,d,eta_SiT_HP,et
         ylabel('T [°C]')
         
         %cloche de base
-        plot(SL,T,'-b',SV,T,'-b')
+        cloche = [SL fliplr(SV)];
+        Tcloche = [T T];
+        plot(cloche,Tcloche,'-b');
+        %plot(SL,T,'-b',SV,T,'-b')
         
         %plot Pompe Pa 1-2
         linS12 = [DAT(4,1) DAT(4,2)];

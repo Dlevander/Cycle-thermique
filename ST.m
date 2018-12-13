@@ -452,7 +452,7 @@ elseif nsout>0
     %p_10 = XSteam('psat_T',T_10); % hypothese 1: point sur la cloche
     %h_10 = XSteam('hL_T',T_10);
     %s_10 = XSteam('sL_T',T_10);
-    p_10 = p_degaz + (p_21 - p_degaz)/2; % hypothese 2: point pas sur la cloche
+    p_10 = p_degaz + (p_21 - p_degaz)/3; % hypothese 2: point pas sur la cloche
     h_10 = XSteam('h_pT',p_10,T_10);
     s_10 = XSteam('s_pT',p_10,T_10);
     x_10 = XSteam('x_ph',p_10,h_10);
@@ -511,7 +511,7 @@ elseif nsout>0
     e_110 = exergie(h_110,s_110);
     %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
     
-    [X,h_90] = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
+    [X,h_90] = Soutirage(h6,h7,h_80,h9,h_100,nsout,d)
     
     %%%%%%%% Calcul etat 90 %%%%%%%%%%
     p_90 = p_degaz;
@@ -741,7 +741,7 @@ MASSFLOW(2) = m_vap;
 MASSFLOW(3) = m_comb;
 MASSFLOW(4) = m_fum;
 
-XMASSFLOW = X;%*m_vap;
+XMASSFLOW = X*m_vap;
 
 COMBUSTION.LHV = LHV;
 COMBUSTION.e_c = e_c;

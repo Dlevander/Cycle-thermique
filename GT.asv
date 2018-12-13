@@ -194,7 +194,7 @@ h_3 =Cp_23*(T_3-T_2) + h_2;
 s_3 = s_2+ Cp_23*log(TK_3/TK_2) - R_fum*log(p_3/p_2);
 e_3 = (h_3-h_1) - 273.15*(s_3-s_1);
 
-%%Calcul point 4 : apres la turbine
+%%Calcul point 4 : aprs la turbine
 p_4 = p_1 ;% atm
 T_4 = transf_poly('detente',T_3,p_4/p_3,eta_PiT,R_fum,x_CO2,x_H2O,x_O2,x_N2);
 TK_4=T_4+273.15;
@@ -209,7 +209,7 @@ DAT(:,1) = [T_1 p_1 h_1 s_1 e_1]';
 DAT(:,2) = [T_2 p_2 h_2 s_2 e_2]';
 DAT(:,3) = [T_3 p_3 h_3 s_3 e_3]';
 DAT(:,4) = [T_4 p_4 h_4 s_4 e_4]';
-%%Rendements energetiques %%
+%%Rendements énergétiques %%
 P_e=P_e*10^3;
 q_comb = (1+1/(lambda*ma1))*(h_3-h_2); % formule 3.9 du livre
 
@@ -222,7 +222,7 @@ m_c=P_e/(LHV*1000*eta_toten);%debit comb
 m_a=lambda*ma1*m_c;%debit air
 m_g=m_a+m_c;%debit fumees
 
-%% rendement exergetique
+%% rendement exergétique
 
 eta_cyclex=(m_g*(h_3-h_4)-m_a*(h_2-h_1))/(m_g*e_3-m_a*e_2);
 eta_rotex=(m_g*(h_3-h_4)-m_a*(h_2-h_1))/(m_g*(e_3-e_4)-m_a*(e_2-e_1));
