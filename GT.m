@@ -284,9 +284,9 @@ for i=1:4 %DAT en kJ/kg
     DAT(4,i)=DAT(4,i)/1000;
     DAT(5,i)=DAT(5,i)/1000;
 end
-if DISPLAY==1
-plot_GT(DAT,eta_PiT,eta_PiC,R_air,x_CO2,x_H2O,x_O2,x_N2);
-plot_GT(DAT,eta_PiT,eta_PiC,R_fum,x_CO2,x_H2O,x_O2,x_N2);
+if display==1
+plot_GT(DAT,eta_PiT,eta_PiC,R_air);
+plot_GT(DAT,eta_PiT,eta_PiC,R_fum);
 end
 
 end
