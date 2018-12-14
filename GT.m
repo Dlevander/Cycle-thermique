@@ -193,7 +193,8 @@ TK_3=T_3+273.15;
 Cp_23 = CP(x_O2,x_CO2,x_H2O,x_N2,[TK_2,TK_3])*1000;
 %CpMoy_23 =CPmoy(x_O2,x_CO2,x_H2O,x_N2,[TK_2,TK_3])*1000;
 %Cp_23_2 =(x_N2*mean(janaf('c','N2',linspace(TK_2,TK_3))) + x_O2*mean(janaf('c','O2',linspace(TK_2,TK_3))) + x_CO2*mean(janaf('c','CO2',linspace(TK_2,TK_3))) + x_H2O*mean(janaf('c','H2O',linspace(TK_2,TK_3))))*1000; %faire cp moyen entre T2 et T3 ?
-h_3 =Cp_23*(T_3-T_2) + h_2; %un peu trop petit, h2 et t3 et t2 sont bons 
+h_3 = CP(x_O2,x_CO2,x_H2O,x_N2,[300,TK_3])*1000*(T_3-15)+h_1;
+%h_3 =Cp_23*(T_3-T_2) + h_2; %un peu trop petit, h2 et t3 et t2 sont bons 
 s_3 = s_2+ Cp_23*log(TK_3/TK_2) - R_fum*log(p_3/p_2);
 e_3 = (h_3-h_1) - 273.15*(s_3-s_1);
 
@@ -215,17 +216,20 @@ DAT(:,3) = [T_3 p_3 h_3 s_3 e_3]';
 DAT(:,4) = [T_4 p_4 h_4 s_4 e_4]';
 %%Rendements énergétiques %%
 P_e=P_e*10^3;
-%q_comb = (1+1/(lambda*ma1))*(h_3-h_2); % formule 3.9 du livre
-eta_mec = 0.95; %hypothese
 eta_cyclen = 1-(((1+1/(lambda*ma1))*h_4-h_1)/((1+1/(lambda*ma1))*h_3-h_2)); %eq3.12
-eta_toten = eta_mec*eta_cyclen;
-W_T = h_3 - h_4; %J/kg
+%eta_toten = eta_mec*eta_cyclen; %eta_mec=P_e/(P_T-P_C)
+W_T = h_3-h_4; %J/kg
 W_C = h_2-h_1;
 
+m_a = P_e/(W_T+W_T/(lambda*ma1)-W_C-k_mec*W_T-k_mec*W_T/(lambda*ma1)-W_C*k_mec); %eq3.29,3.1,3.7 et 3.8
+m_c = m_a/(lambda*ma1);
+m_g = m_a+m_c;
+eta_toten = P_e/(LHV*1000*m_c);
+eta_mec = eta_toten/eta_cyclen;
 
-m_c=P_e/(LHV*1000*eta_toten);%debit comb
-m_a=lambda*ma1*m_c;%debit air
-m_g=m_a+m_c;%debit fumees
+% m_c=P_e/(LHV*1000*eta_toten);%debit comb
+% m_a=lambda*ma1*m_c;%debit air
+% m_g=m_a+m_c;%debit fumees
 
 %% rendement exergétique
 
@@ -244,7 +248,7 @@ pertesTotex= Pprim*(1-eta_totex);
 pertes_cyclex= (m_g*e_3-m_a*e_2)-Pm;
 pertes_combu = (1-eta_combex)*e_c*m_c*1000;
 pertes_cycle=Pprim*(1-eta_cyclex);
-pertes_echap=(m_g*e_3-m_a*e_2)-(m_g*(e_3-e_4)-m_a*(e_2-e_1));
+pertes_echapex=(m_g*e_3-m_a*e_2)-(m_g*(e_3-e_4)-m_a*(e_2-e_1));
 pertes_ExC =  ((h_2-h_1) - (e_2-e_1))*m_a; %Watts/sec
 pertes_ExT =  ((e_3-e_4) - (h_3-h_4))*m_g;
 pertes_rotex = pertes_ExC + pertes_ExT;
@@ -263,12 +267,12 @@ ETA(5) = eta_rotex;
 ETA(6) = eta_combex;
 
 DATEN(1) = pertes_mec/1000;
-DATEN(2) = pertes_echap/1000;
+DATEN(2) = pertes_echap/1000; 
 
 DATEX(1) = pertes_mec/1000;
 DATEX(2) = pertes_rotex/1000;
 DATEX(3) = pertes_combu/1000;
-DATEX(4) = pertes_echap/1000 ; 
+DATEX(4) = pertes_echapex/1000 ; 
 
 COMBUSTION.LHV = LHV ;
 COMBUSTION.e_c = e_c ;
@@ -279,13 +283,12 @@ COMBUSTION.fum(1) =  x_O2*m_g ;
 COMBUSTION.fum(2) =  x_N2*m_g ;
 COMBUSTION.fum(3) =  x_CO2*m_g;
 COMBUSTION.fum(4) =  x_H2O*m_g;
-COMBUSTION.Cp_g
 for i=1:4 %DAT en kJ/kg
     DAT(3,i)=DAT(3,i)/1000;
     DAT(4,i)=DAT(4,i)/1000;
     DAT(5,i)=DAT(5,i)/1000;
 end
-if display==1
+if display ==1
 FIG(1)=plot_GT(DAT,eta_PiT,eta_PiC,R_air);
 end
 
