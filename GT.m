@@ -10,12 +10,12 @@ function [ETA,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = GT(P_e,options,display)
 % P_E = electrical power output target [kW]
 % OPTIONS is a structure containing :
 %   -options.k_mec [-] : Shaft losses 
-%   -options.T_0   [°C] : Reference temperature
-%   -options.T_ext [°C] : External temperature
+%   -options.T_0   [C] : Reference temperature
+%   -options.T_ext [C] : External temperature
 %   -options.r     [-] : Comperssion ratio
 %   -options.k_cc  [-] : Coefficient of pressure losses due to combustion
 %                        chamber
-%   -options.T_3   [°C] : Temperature after combustion (before turbine)
+%   -options.T_3   [C] : Temperature after combustion (before turbine)
 %   -option.eta_PiC[-] : Intern polytropic efficiency (Rendement
 %                        polytropique interne) for compression
 %   -option.eta_PiT[-] : Intern polytropic efficiency (Rendement
@@ -283,7 +283,7 @@ for i=1:4 %DAT en kJ/kg
     DAT(5,i)=DAT(5,i)/1000;
 end
 if display ==1
-FIG(1)=plot_GT(DAT,eta_PiT,eta_PiC,R_air);
+    %FIG(1)=plot_GT(DAT,eta_PiT,eta_PiC,R_air);
 end
 
 end
