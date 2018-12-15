@@ -16,12 +16,12 @@ function [FIG] = plot_GT(DAT,eta_PiT,eta_PiC,x,y,k_cc)
 %             linT12Kjanaf(i) = linT12K(i);
 %         end
 %     end
-    Cp_12 = 1000*arrayfun(@(t) (x_a_N2*mean(janaf('c','N2',linspace(300,t)))+x_a_O2*mean(janaf('c','O2',linspace(300,t)))),linT12K) ;
+    Cp_12 = arrayfun(@(t) (x_a_N2*mean(janaf('c','N2',linspace(300,t)))+x_a_O2*mean(janaf('c','O2',linspace(300,t)))),linT12K) ;
     %Cp_12 =(arrayfun(@(t) CP(x_a_O2,0,0,x_a_N2,[300 t]),linT12K)); %[kj/kg/K]
     linS12 = DAT(4,1) + (1-eta_PiC).*Cp_12.*log((linT12K)./(DAT(1,1)+273.15));%[kj/kg/K]
     %Combustion isobare 2-3
     TK_2 = DAT(1,2)+273.15;
-    linT23 = linspace(DAT(1,2),DAT(1,3),1000);
+    linT23 = linspace(DAT(1,2),DAT(1,3),100);
     linT23K = linT23+273.15;
     p_3 = DAT(2,2)*k_cc; %pertes de charges dans chambre combustion
     %preallocation
@@ -61,7 +61,7 @@ function [FIG] = plot_GT(DAT,eta_PiT,eta_PiC,x,y,k_cc)
     plot(DAT(4,:),DAT(1,:),'*');
     plot(linS12,linT12,'r')
     plot(linS23,linT23,'r')
-    plot(linS34,linT34,'r')
+    plot([DAT(4,3) linS34(2:length(linS34))],[DAT(1,3) linT34(2:length(linT34))],'r')
     title('Diagramme T-s')
     xlabel('s [kj/kg K]')
     ylabel('T [°C]')
