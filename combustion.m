@@ -14,12 +14,12 @@ elseif x == 0 && y == 8/3
     LHV = 46465; % [kJ/kg]
 end
 ma1 = (32+3.76*28.15)*(1+(y/4))/(12.01+1.008*y); % pouvoir comburivore [kg_air_stoech/kg_comb]
-% %% Determination de lambda%%
+%% Determination de lambda
 if lambda==0
 cp_CH4 = 2.44*1000; %cp methane a 15C, trouve sur internet J/kg*K
 b2 = y/2; %pg 26 cours combu
 a2 = 1; % ???
-b1 = 0; %hypothèse
+b1 = 0; %hypothese
 a1 = 0;
 
 hO2_2 = 1000*mean(janaf('c','O2',linspace(300,T2+273.15)))*T2;
@@ -34,7 +34,7 @@ Denom = (hO2_3*Mm_O2+ 3.76*hN2_3*Mm_N2- hO2_2*Mm_O2- 3.76*hN2_2*Mm_N2);
 w = Num/Denom; %w, coefficient stoech de l'air
 lambda = w/(1+y/4); %X=0 pour nous
 
-% lambda = 2.2864 ; % valeur quil faut atteindre pour lexemple bouquin p125 !!!
+% lambda = 2.2864 ; % valeur qu'il faut atteindre (GT) pour l'exemple bouquin p125 !!!
 end
 
 %%determination des fractions massiques des fumees

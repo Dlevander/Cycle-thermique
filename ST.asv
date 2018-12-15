@@ -269,7 +269,7 @@ T_30 = T_max;
 p_30 = p3_hp;
 h_30 = XSteam('h_pT',p_30,T_30);
 s_30 = XSteam('s_pT',p_30,T_30);
-x_30 = XSteam('x_ps',p_30,s_30);
+x_30 = XSteam('x_ph',p_30,h_30);
 e_30 = exergie(h_30,s_30);
 
 %%%%%%%%%%%%%%% ETAT 22 %%%%%%%%%%%%%%%
@@ -278,7 +278,7 @@ T_22= XSteam('Tsat_p',p_22);% Tsat
 h_22= XSteam('hV_p',p_22);
 s_22= XSteam('sV_p',p_22);
 e_22= exergie(h_22,s_22);
-x_22= XSteam('x_ph',p_22,s_22);
+x_22= XSteam('x_ph',p_22,h_22);
 
 %%%%%%%%%%%%%%% ETAT 21 %%%%%%%%%%%%%%%
 T_21 = T_22; % evaporation isoterme
@@ -286,7 +286,7 @@ p_21 = p_22; %XSteam('psat_T',T_21)
 h_21 = XSteam('hL_T',T_21);
 s_21= XSteam('sL_p',p_21);
 e_21= exergie(h_22,s_22);
-x_21= XSteam('x_ps',p_21,s_21);
+x_21= XSteam('x_ph',p_21,h_21);
 %%%%%%%%%%%%%%%% Si resurchauffe %%%%%%%%%%%%%%%
 if reheat == 1
     
