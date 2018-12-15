@@ -2,8 +2,8 @@ function [FIG] = plot_GT(DAT,eta_PiT,eta_PiC,R_air)
     %Compression 1-2
     linP12 = linspace(DAT(2,1),DAT(2,2),100);
     linr12 = DAT(2,2)./fliplr(linP12);
-    linT12 = arrayfun(@(r) transf_poly('compression',DAT(1,1),r,eta_PiC,R_air,0,0,0,0),linr12);
-    %linT12 = transf_poly('compression',DAT(1,1),linr12,eta_PiC,R_air,0,0,0,0);
+    linT12 = arrayfun(@(r));
+    linT12 = transf_poly('compression',DAT(1,1),linr12,eta_PiC,R_air,0,0,0,0);
     linT12K = linT12+273.15;
     linS12 = DAT(4,1) + (1-eta_PiC)*Cp_12*log((linT12K)/(DAT(1,1)+273.15));
     %Combustion isobare 2-3

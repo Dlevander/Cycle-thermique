@@ -27,7 +27,7 @@ if strcmp(transf,'compression')
     %T2=T1*exp(log(r)*Rstar/(rend*Cp)); %eq 3.17
     Cv=Cp-Rstar;
     gamma=Cp/Cv;
-    T2=T1*r^((gamma-1)/(gamma*rend));
+    T2=T1*r.^((gamma-1)/(gamma*rend));
     n=n+1;
     end
     

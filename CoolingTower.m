@@ -1,4 +1,4 @@
-function [DAT_WATER DAT_AIR MASSFLOW] = CoolingTower(P_w,options)
+function [DAT_WATER,DAT_AIR,MASSFLOW] = CoolingTower(P_w,options)
 % COOLINGTOWER is a cooling tower 0D modelisation
 % COOLINGTOWER(P_w,options) compute the thermodynamics states for a Cooling
 % tower based on several inputs (given in OPTION) and based on a given
@@ -108,7 +108,7 @@ if isfield(options,'Phi_out')
     Phi_out = options.Phi_out;
 else
     % minimisation du debit d'air necessaire avec
-    Phi_out = 1; %[K]
+    Phi_out = 1;
 end
 Cp_el = 4.186; % [kj/kg/K] Cp eau liquide suppose constant
 %% etat a_in : air at the cooling tower inlet
@@ -116,7 +116,7 @@ Cp_el = 4.186; % [kj/kg/K] Cp eau liquide suppose constant
 psat_a_in = XSteam('psat_T',Ta_in);
 p_a_in = 1.01325; %pression atm
 phia_in = Phi_atm;
-xa_in = 0.622*phia_in*psat_a_in/(p_a_in-phia_in*psat_a_in);
+xa_in = 0.621945*phia_in*psat_a_in/(p_a_in-phia_in*psat_a_in);
 ha_in = 1.009*(Ta_in+273.15) + xa_in*(2501.6 + 1.854*(Ta_in+273.15));
 
 %% etat a_out : air at the cooling tower outlet
@@ -124,7 +124,7 @@ ha_in = 1.009*(Ta_in+273.15) + xa_in*(2501.6 + 1.854*(Ta_in+273.15));
 phia_out = Phi_out;
 psat_a_out = XSteam('psat_T',Ta_out);
 p_a_out = 1.01325; %pression atm
-xa_out = 0.622*phia_out*psat_a_out/(p_a_out-phia_out*psat_a_out);
+xa_out = 0.621945*phia_out*psat_a_out/(p_a_out-phia_out*psat_a_out);
 ha_out = 1.009*(Ta_out+273.15) + xa_out*(2501.6 + 1.854*(Ta_out+273.15));
 
 %% etat e3 : water just after  condenser
@@ -155,15 +155,15 @@ m_e4 = m_ev;
 T_e1 = (m_e*Cp_el*(T_e3+273.15)-m_as*(ha_out-ha_in))/(m_e1*Cp_el);
 h_e1 = Cp_el*(T_e1+273.15);
 
-MASSFLOW = [m_e,m_ev,m_as];
+MASSFLOW = [m_e,m_ev,m_as]
 
 DAT_WATER = [T_e1       , T_e2       , T_e3       , T_e4;  %[C]
              h_e1       , h_e2       , h_e3       , h_e4;  %[kJ/kg]
-             m_e1       , m_e2       , m_e3       , m_e4]; %[kg/s]
+             m_e1       , m_e2       , m_e3       , m_e4] %[kg/s]
 DAT_AIR = [Ta_in,   Ta_out;     %[C]
            ha_in,   ha_out;     %[kJ/kg]
            xa_in,   xa_out;     %[-]
-           phia_in, phia_out];  %[-]
+           phia_in, phia_out]  %[-]
        
 % DAT_AIR(:,1) = [Ta_in ;ha_in;xa_in;phia_in];
 % DAT_AIR(:,2) = [Ta_out;ha_out;xa_out;phia_out];
