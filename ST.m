@@ -655,14 +655,14 @@ T_f = Tmax; %T fumees juste en sortie de combustion
 TK_f = T_f+273.15;
 
 Cp_f = CP(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_f,100)); %[kj/kg/K]
-CpMoy_f = CPmoy(x_O2, x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_f,100)); %[kj/kg/K]
+CpMoy_f = CPmoy(x_O2, x_CO2,x_H2O,x_N2,[TK_janaf,TK_f]); %[kj/kg/K]
 delta_hf = Cp_f *(TK_f-TK_0);% [kj/kg]
 delta_Sf = CpMoy_f * log(TK_f/TK_0); % [kj/kg*K]
 e_f = delta_hf-TK_0*delta_Sf; % [kj/kg]
 %e_f = 1881; %kJ/kg
 
 Cp_exh = CP(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100)); % [kj/kg*K]
-CpMoy_exh = CPmoy(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100)); % [kj/kg*K]
+CpMoy_exh = CPmoy(x_O2,x_CO2,x_H2O,x_N2,[TK_janaf,TK_exh]); % [kj/kg*K]
 delta_h_exh = Cp_exh*(TK_exh-TK_0); % [kj/kg]
 delta_S_exh = CpMoy_exh*log(TK_exh/TK_0); % [kj/kg/K]
 e_exh = delta_h_exh-TK_0*delta_S_exh; % [kj/kg]
