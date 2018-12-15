@@ -1,4 +1,4 @@
-function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION FIG] = GT(P_e,options,display)
+function [ETA,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = GT(P_e,options,display)
 % GT Gas turbine modelisation
 % GT(P_e,options,display) compute the thermodynamics states for a Gas
 % turbine based on several inputs (given in OPTION) and based on a given 
@@ -77,20 +77,16 @@ function [ETA DATEN DATEX DAT MASSFLOW COMBUSTION FIG] = GT(P_e,options,display)
 
 %% Your Work
 
-% % Exemple of how to use 'nargin' to check your number of inputs
-% if nargin<3
-%     display=1;
-%    if nargin<2
-%        options=struct();
-%        if nargin<1
-%            P_e=100e3;%100MW
-%        end
-%    end
-% end
+if nargin<3
+    display=1;
+   if nargin<2
+       options=struct();
+       if nargin<1
+           P_e=230e3; %[kW]
+       end
+   end
+end
 
-
-% Exemple of how to use (isfield' to check if an option has been given (or
-% not)
 if isfield(options,'T_0')
     T_0 = options.T_0;
 else
@@ -100,7 +96,7 @@ end
 if isfield(options,'k_mec')
     k_mec = options.k_mec;
 else
-    k_mec = 0.961;   
+    k_mec = 0.015;   
 end
 
 if isfield(options,'T_ext')
@@ -121,13 +117,11 @@ else
     k_cc = 0.95;   
 end
 
-
 if isfield(options,'T_3')
     T_3 = options.T_3;
 else
-    T_3 = 1400;   %C
+    T_3 = 1400;   %[C]
 end
-
 
 if isfield(options,'eta_PiC')
     eta_PiC = options.eta_PiC;
