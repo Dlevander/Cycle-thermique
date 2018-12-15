@@ -1,7 +1,7 @@
 clear all 
 close all
 %% Rankine Hirn
-optionsST.nsout = 0;   %  [-] : Number of feed-heating
+optionsST.nsout = 2;   %  [-] : Number of feed-heating
 optionsST.reheat  = 0; %  [-] : Number of reheating
 optionsST.T_max = 520; %  [°C] : Maximum steam temperature
 optionsST.T_cond_out = 33; %  [°C] : Condenseur cold outlet temperature

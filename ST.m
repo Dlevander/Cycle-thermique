@@ -384,31 +384,47 @@ if nsout==0
     e_20  = exergie(h_20,s_20);
     
 elseif nsout>0
-    %%%%%%%%% Calcul etats 6xs et 6x %%%%%%%%
-    % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
-    %%%%test h_60 au lieu de h_60s
-    h6s_temp = linspace(h_60s,h_50,(nsout+1)); %h_6x, x plus bas => enthalpie plus basse
-    h6s = h6s_temp(2:length(h6s_temp)-1);
-    s_60s = s_50;
-    p6s = arrayfun( @(h) XSteam('p_hs',h,s_60s),h6s);
-    
-    p6 = p6s; %hypothese
-    %TEST
-    h6 = h_50-eta_SiT_others*(h_50-h6s);
-    
-    %x_60 = x_40;
-    s6 = arrayfun( @(p,h) XSteam('s_ph',p,h),p6,h6);
-    T6 = arrayfun( @(p,h) XSteam('T_ph',p,h),p6,h6);
-    x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
-    e6 = exergie(h6,s6);
-    % l'echangeur en sortie de HP a son etat deja defini
-    h6 = [h6 h_40];
-    p6 = [p6 p_40];
-    T6 = [T6 T_40];
-    s6 = [s6 s_40];
-    x6 = [x6 x_40];
-    e6 = [e6 e_40];
-    
+    if reheat == 1
+        %%%%%%%%% Calcul etats 6xs et 6x %%%%%%%%
+        % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
+        h6s_temp = linspace(h_60s,h_50,(nsout+1));
+        s_60s = s_50;
+        p6s = arrayfun( @(h) XSteam('p_hs',h,s_60s),h6s);
+        
+        p6 = p6s; %hypothese
+        h6 = h_50-eta_SiT_others*(h_50-h6s);
+        
+        %x_60 = x_40;
+        s6 = arrayfun( @(p,h) XSteam('s_ph',p,h),p6,h6);
+        T6 = arrayfun( @(p,h) XSteam('T_ph',p,h),p6,h6);
+        x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
+        e6 = exergie(h6,s6);
+        % l'echangeur en sortie de HP a son etat deja defini
+        h6 = [h6 h_40];
+        p6 = [p6 p_40];
+        T6 = [T6 T_40];
+        s6 = [s6 s_40];
+        x6 = [x6 x_40];
+        e6 = [e6 e_40];
+        
+    elseif reheat == 0
+        %%%%%%%%% Calcul etats 6xs et 6x %%%%%%%%
+        %+2 pour le linspace
+        h6s_temp = linspace(h_60s,h_30,(nsout+2));
+        h6s = h6s_temp(2:length(h6s_temp)-1);
+        s_60s = s_30;
+        p6s = arrayfun( @(h) XSteam('p_hs',h,s_60s),h6s);
+        
+        p6 = p6s; %hypothese
+        
+        h6 = h_30-eta_SiT_others*(h_30-h6s);
+        
+        %x_60 = x_40;
+        s6 = arrayfun( @(p,h) XSteam('s_ph',p,h),p6,h6);
+        T6 = arrayfun( @(p,h) XSteam('T_ph',p,h),p6,h6);
+        x6 = arrayfun( @(p,h) XSteam('x_ph',p,h),p6,h6);
+        e6 = exergie(h6,s6);
+    end
     
     %% Degazification
     %%%%%%%%% Calcul etat 7x %%%%%%%%%%
@@ -498,7 +514,7 @@ elseif nsout>0
     %pas de vanne entre l'etat 71 et R0 etat 101 = etat 71
     %vannes isenthalpique
     h10 = h7; %etat 10d = etat 7d
-    if drumFlag == 1
+    if drumFlag == 1 && d>2
         p10 = [p7(1) p7(1:d-2) p7(d) p7(d:nsout-1)];
     else
         p10 = [p7(1) p7(1:nsout-1)];
@@ -539,7 +555,15 @@ DAT(:,5) = [T_30 p_30 h_30 s_30 e_30 x_30]';
 if reheat == 0
     DAT(:,6) = [T_60 p_60 h_60 s_60 e_60 x_60]';
     if nsout > 0
-        
+         DAT(:,7:6+nsout) = [T6;p6;h6;s6;e6;x6];
+         DAT(:,7+nsout) = [T_70 p_70 h_70 s_70 e_70 x_70]';
+         dat7 = [T7;p7;h7;s7;e7;x7];
+         dat10 = [T10;p10;h10;s10;e10;x10];
+         dat100 = [T_100 p_100 h_100 s_100 e_100 x_100]';
+         dat110 = [T_110 p_110 h_110 s_110 e_110 x_110]';
+         DAT(:,8+nsout) = [T_80 p_80 h_80 s_80 e_80 x_80]';
+         DAT(:,9+nsout) = [T_90 p_90 h_90 s_90 e_90 x_90]';
+         DAT(:,10+nsout:9+2*nsout) = [T9;p9;h9;s9;e9;x9];
     end
 elseif reheat == 1
     DAT(:,6) = [T_40 p_40 h_40 s_40 e_40 x_40]';
@@ -766,7 +790,7 @@ if display == 1
         if nsout == 0
             FIG(1:2) = plotRankineHirn(DAT,eta_SiT_HP,eta_SiT_others);
         else
-            %FIG = plot_nsout(DAT,eta_SiT_HP,eta_SiT_others);
+            FIG = plot_nsout(DAT,dat7,dat10,dat100,dat110,eta_SiT_HP,nsout);
         end
     elseif reheat == 1
         if nsout == 0

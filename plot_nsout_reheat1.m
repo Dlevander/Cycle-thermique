@@ -140,5 +140,5 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,eta_SiT_HP,eta_
         linSoutH = [linH67 linH710]';
         plot(linSoutS,linSoutH);
         %plot detente vanne apres subcooler
-        plot(linS100110,linH100110,'linewidth',3);
+        plot(linS100110,linH100110);
 end

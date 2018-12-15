@@ -19,6 +19,7 @@ while err >=1e-4
         end
     elseif d == 1 % si d=1 => pas de subcooler => h_90 = h_80
         H9 = [h_80 h9(1:nsout-1)];
+        deltaH9 = h9-H9;
     end
     if d < nsout
         %Remplissage A coin apres ligne d , matrice taille nsout-d x nsout-d
