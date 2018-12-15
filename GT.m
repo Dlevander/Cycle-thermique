@@ -158,7 +158,7 @@ x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
 x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
 % %calcul point 1 : air atmosphérique
 
-p_1 = 1,01325;  %bar
+p_1 = 1.01325;  %bar
 T_1 = T_ext ;
 Cp_air_27 = 1000*(x_a_N2*janaf('c','N2',300)+x_a_O2*janaf('c','O2',300)) ; %J/kg*K
 h_1 = T_ext * Cp_air_27 ;
@@ -176,21 +176,21 @@ h_2 = h_1 + Cp_12*(T_2-T_1);
 s_2 = s_1 + (1-eta_PiC)*Cp_12*log((TK_2)/(T_1+273.15)); %eq 3.15
 %h_2=443400;
 %s_2=142;
-e_2 = (h_2-h_1) - 273.15*(s_2-s_1);
+e_2 = (h_2-h_1) - (T_ext+273.15)*(s_2-s_1);
 
 %%calcul point 3 : après la combustion
 
-T_3 = T_3 ; % really ?
+%T_3 donnee
 p_3 = p_2*k_cc; %pertes de charges dans chambre combustion
 TK_3=T_3+273.15;
-[x_N2 x_O2 x_CO2 x_H2O R_fum lambda ma1 LHV e_c] = combustion(x,y,T_2,T_3,0);
+[x_N2,x_O2,x_CO2,x_H2O,R_fum,lambda,ma1,LHV,e_c] = combustion(x,y,T_2,T_3,0);
 Cp_23 = CP(x_O2,x_CO2,x_H2O,x_N2,[TK_2,TK_3])*1000;
 %CpMoy_23 =CPmoy(x_O2,x_CO2,x_H2O,x_N2,[TK_2,TK_3])*1000;
 %Cp_23_2 =(x_N2*mean(janaf('c','N2',linspace(TK_2,TK_3))) + x_O2*mean(janaf('c','O2',linspace(TK_2,TK_3))) + x_CO2*mean(janaf('c','CO2',linspace(TK_2,TK_3))) + x_H2O*mean(janaf('c','H2O',linspace(TK_2,TK_3))))*1000; %faire cp moyen entre T2 et T3 ?
 h_3 = CP(x_O2,x_CO2,x_H2O,x_N2,[300,TK_3])*1000*(T_3-15)+h_1;
 %h_3 =Cp_23*(T_3-T_2) + h_2; %un peu trop petit, h2 et t3 et t2 sont bons 
 s_3 = s_2+ Cp_23*log(TK_3/TK_2) - R_fum*log(p_3/p_2);
-e_3 = (h_3-h_1) - 273.15*(s_3-s_1);
+e_3 = (h_3-h_1) - (T_ext+273.15)*(s_3-s_1);
 
 %%Calcul point 4 : aprs la turbine
 p_4 = p_1 ;% atm
@@ -200,7 +200,7 @@ Cp_34 = CP(x_O2,x_CO2,x_H2O,x_N2,[TK_3,TK_4])*1000;
 %Cp_34_2 =(x_N2*mean(janaf('c','N2',linspace(TK_3,TK_4))) + x_O2*mean(janaf('c','O2',linspace(TK_3,TK_4))) + x_CO2*mean(janaf('c','CO2',linspace(TK_3,TK_4))) + x_H2O*mean(janaf('c','H2O',linspace(TK_3,TK_4))))*1000;
 h_4 = h_3 + Cp_34*(T_4-T_3);
 s_4 = s_3 - Cp_34*log(TK_4/TK_3)* ((1-eta_PiT)/eta_PiT);%eq3.16
-e_4 = (h_4-h_1) - 273.15*(s_4-s_1);
+e_4 = (h_4-h_1) - (T_ext+273.15)*(s_4-s_1);
 
 %%Remplissage etats
 
@@ -208,7 +208,7 @@ DAT(:,1) = [T_1 p_1 h_1 s_1 e_1]';
 DAT(:,2) = [T_2 p_2 h_2 s_2 e_2]';
 DAT(:,3) = [T_3 p_3 h_3 s_3 e_3]';
 DAT(:,4) = [T_4 p_4 h_4 s_4 e_4]';
-%%Rendements énergétiques %%
+%%Rendements energetiques %%
 P_e=P_e*10^3;
 eta_cyclen = 1-(((1+1/(lambda*ma1))*h_4-h_1)/((1+1/(lambda*ma1))*h_3-h_2)); %eq3.12
 %eta_toten = eta_mec*eta_cyclen; %eta_mec=P_e/(P_T-P_C)
@@ -243,7 +243,7 @@ pertes_cyclex= (m_g*e_3-m_a*e_2)-Pm;
 pertes_combu = (1-eta_combex)*e_c*m_c*1000;
 pertes_cycle=Pprim*(1-eta_cyclex);
 pertes_echapex=(m_g*e_3-m_a*e_2)-(m_g*(e_3-e_4)-m_a*(e_2-e_1));
-pertes_ExC =  ((h_2-h_1) - (e_2-e_1))*m_a; %Watts/sec
+pertes_ExC =  ((h_2-h_1) - (e_2-e_1))*m_a; %W/s
 pertes_ExT =  ((e_3-e_4) - (h_3-h_4))*m_g;
 pertes_rotex = pertes_ExC + pertes_ExT;
 pertes_echap = h_4*m_g;
