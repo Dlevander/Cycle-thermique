@@ -42,11 +42,11 @@ MWeight=eval(['MolWeight.' spec]);
 
 for i=1:length(T)
     % choose temperature range vector
-    if (T(i)>1000 & T(i)<=5000)
+    if (T(i)>1000 && T(i)<=5000)
         eval(['ai=' spec '(1,:);'])
         out(z)=calc(ai, T(i), prop, MWeight);
         z=z+1;
-    elseif (T(i)>=300 & T(i)<=1000)
+    elseif (T(i)>=300 && T(i)<=1000)
         eval(['ai=' spec '(2,:);'])
         out(z)=calc(ai, T(i), prop, MWeight);
         z=z+1;

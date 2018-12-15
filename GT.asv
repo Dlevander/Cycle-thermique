@@ -178,7 +178,7 @@ s_2 = s_1 + (1-eta_PiC)*Cp_12*log((TK_2)/(T_1+273.15)); %eq 3.15
 %s_2=142;
 e_2 = (h_2-h_1) - (T_ext+273.15)*(s_2-s_1);
 
-%%calcul point 3 : après la combustion
+%%calcul point 3 : apres la combustion
 
 %T_3 donnee
 p_3 = p_2*k_cc; %pertes de charges dans chambre combustion
