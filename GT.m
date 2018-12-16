@@ -41,7 +41,7 @@ function [ETA,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = GT(P_e,options,display)
 %   -datex(3) : perte_combex [kW]
 %   -datex(4) : perte_echex  [kW]
 % DAT is a matrix containing :
-% dat = {T_1       , T_2       , T_3       , T_4; [°C]
+% dat = {T_1       , T_2       , T_3       , T_4; [Â°C]
 %        p_1       , p_2       , p_3       , p_4; [bar]
 %        h_1       , h_2       , h_3       , h_4; [kJ/kg]
 %        s_1       , s_2       , s_3       , s_4; [kJ/kg/K]
@@ -108,7 +108,7 @@ end
 if isfield(options,'r')
     r = options.r;
 else
-    r = 18;   
+    r = 10;   
 end
 
 if isfield(options,'k_cc')
@@ -120,7 +120,7 @@ end
 if isfield(options,'T_3')
     T_3 = options.T_3;
 else
-    T_3 = 1400;   %[C]
+    T_3 = 1050;   %[C]
 end
 
 if isfield(options,'eta_PiC')
@@ -152,11 +152,11 @@ MASSFLOW = zeros(3,1);
 
 FIG = 0; %A MODIFIER
 
-%%%%% Calcul des états %%%%%%
+%%%%% Calcul des Ã©tats %%%%%%
 R_air = 287.1; %J/kg.K 
 x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
 x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
-% %calcul point 1 : air atmosphérique
+% %calcul point 1 : air atmosphÃ©rique
 
 p_1 = 1.01325;  %bar
 T_1 = T_ext ;
@@ -225,7 +225,7 @@ eta_mec = eta_toten/eta_cyclen;
 % m_a=lambda*ma1*m_c;%debit air
 % m_g=m_a+m_c;%debit fumees
 
-%% rendement exergétique
+%% rendement exergÃ©tique
 
 eta_cyclex=(m_g*(h_3-h_4)-m_a*(h_2-h_1))/(m_g*e_3-m_a*e_2);
 eta_rotex=(m_g*(h_3-h_4)-m_a*(h_2-h_1))/(m_g*(e_3-e_4)-m_a*(e_2-e_1));
@@ -290,7 +290,7 @@ if display ==1
 %     title(['Puissance energetique primaire: ' num2str(Pu_tot*1e-3,'%.1f'),'[MW]'])
 %     
     FIG(4) = figure;
-    label_ex = {['Puissance effective: ',num2str(P_e*1e-6,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(pertes_mec*1e-6,'%.1f'),'[MW]'],['Irreversibilites a la turbine et au compresseur: ',num2str(pertes_rotex*1e-6,'%.1f'),'[MW]'],['Perte � l''�chappement: ',num2str(pertes_echex*1e-6,'%.1f'),'[MW]'],['Irreversibilite de la combustion: ',num2str(pertes_combu*1e-6,'%.1f'),'[MW]']};
+    label_ex = {['Puissance effective: ',num2str(P_e*1e-6,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(pertes_mec*1e-6,'%.1f'),'[MW]'],['Irreversibilites a la turbine et au compresseur: ',num2str(pertes_rotex*1e-6,'%.1f'),'[MW]'],['Perte à l''échappement: ',num2str(pertes_echex*1e-6,'%.1f'),'[MW]'],['Irreversibilite de la combustion: ',num2str(pertes_combu*1e-6,'%.1f'),'[MW]']};
     pie([P_e*1e-3;DATEX(1);DATEX(2);DATEX(4);DATEX(3)],label_ex)
     title(['Flux d''exergie primaire: ' num2str(Pprim*1e-6,'%.1f'),'[MW]'])
 end
