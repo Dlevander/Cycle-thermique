@@ -11,7 +11,7 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,eta_SiT_HP,eta_
         hold on
         grid on
         title('Diagramme T-s')
-        xlabel('s [kj/kg K]')
+        xlabel('s [kj/kg/K]')
         ylabel('T [°C]')
         
         %cloche de base
@@ -96,7 +96,7 @@ function [FIG] = plot_nsout_reheat1(DAT,dat7,dat10,dat100,dat110,eta_SiT_HP,eta_
         hold on
         grid on
         title('Diagramme h-s')
-        xlabel('s [kj/kg K]')
+        xlabel('s [kj/kg/K]')
         ylabel('h [kj/kg]')
         
         %cloche de base

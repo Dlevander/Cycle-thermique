@@ -71,13 +71,13 @@ end
 if isfield(options,'Tw_out')
     Tw_out = options.Tw_out;
 else
-    Tw_out = 42.8; %[C]
+    Tw_out = 43; %[C]
 end
 
 if isfield(options,'Tw_in')
     Tw_in = options.Tw_in;
 else
-    Tw_in = 4; %[C]
+    Tw_in = 15; %[C]
 end
 
 if isfield(options,'Triver')
