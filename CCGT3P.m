@@ -535,6 +535,101 @@ if display ==1
     label_ex = {['Puissance effective GT: ',num2str(P_eg*1e-3,'%.1f'),'[MW]'],['Puissance effective ST: ',num2str(P_es*0.001,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(pertesEx_mec*1e-3,'%.1f'),'[MW]'],['Pertes au condenseur: ',num2str(pertesEx_cond*1e-3,'%.1f'),'[MW]'],['Irreversibilites a la turbine et aux pompes: ',num2str(pertesEx_rot_tot*1e-3,'%.1f'),'[MW]'],['Pertes a la cheminee: ',num2str(pertesEx_exh*1e-3,'%.1f'),'[MW]'],['Irreversibilite de la combustion: ',num2str(pertesEx_comb*1e-3,'%.1f'),'[MW]']};
     pie([P_eg;P_es;pertesEx_mec;pertesEx_cond;pertesEx_rot_tot;pertesEx_exh;pertesEx_comb],label_ex)
     title(['Flux d''exergie primaire: ' num2str(fluxEx_prim*1e-3,'%.1f'),'[MW]'])
+    
+    %plot HRSG
+    FIG(6) = figure;
+    hold on;
+    plot(0,T_4g,'.r','MarkerSize',16); text(0,T_4g+30,'4g','FontSize',16);
+    plot(100,T_5g,'.r','MarkerSize',16); text(100,T_5g,'5g','FontSize',16);
+    
+    T_4g5g = linspace(T_4g,T_5g,20);
+    Q_4g5g = zeros(length(T_4g5g),1);
+    for i=2:length(T_4g5g)
+        Cp_fumHRSG = CP(x_O2,x_CO2,x_H2O,x_N2,[T_4g+273.15,T_4g5g(i)+273.15]);
+        
+        Q_4g5g(i) = Cp_fumHRSG*(T_4g-T_4g5g(i))*100/(h_4g-h_5g);
+    end
+    
+    plot(Q_4g5g,T_4g5g);
+  
+    plot(0,0);
+
+    h_L1 = h_4g - mv_HP/m_gg * (h_3-h_102)...
+            + mv_IP/m_gg * (h_5-(h_4+h_90)/2);
+    h_L2 = h_K + mv_LP/m_gg * ((h_6-h_80)/2)...
+                + mv_IP/m_gg * (h_92 - h_91);
+    h_L3 = h_M + mv_LP/m_gg * (h_82-h_81);
+    
+    
+    Q = zeros(8,1);
+    %Q(1) reste 0
+    Q(2) = (h_4g - h_L1)*100 / (h_4g-h_5g);
+    Q(3) = (h_4g - h_P)*100 / (h_4g-h_5g);
+    Q(4) = (h_4g - h_L2)*100 / (h_4g-h_5g);
+    Q(5) = (h_4g - h_K)*100 / (h_4g-h_5g);
+    Q(6) = (h_4g - h_L3)*100 / (h_4g-h_5g);
+    Q(7) = (h_4g - h_M)*100 / (h_4g-h_5g);
+    Q(8) = 100;
+
+    T=[T_3, T_102, T_101, T_91, T_91,...
+        T_82, T_81, T_2];
+    
+    %plot(Q,T,'.b');
+    plot(Q,T,'-r');
+    text(Q(1)+0.4,T_3-30,'3','FontSize',16);
+    text(Q(1)+0.4,T_5-50,'5','FontSize',16);
+    text(Q(2)-1,T_102-20,'102','FontSize',16);
+    text(Q(3)-1,T_101-20,'101','FontSize',16);
+    text(Q(3)-1,T_90-50,'90','FontSize',16);
+    text(Q(3)-1,T_6-80,'6','FontSize',16);
+    text(Q(4)-1,T_91-20,'91','FontSize',16);
+    text(Q(4)-1,T_92-50,'92','FontSize',16);
+    text(Q(5)-1,T_91-50,'91','FontSize',16);
+    text(Q(5)-1,T_80-20,'80','FontSize',16);
+    text(Q(6)-1,T_81-20,'81','FontSize',16);
+    text(Q(6)-1,T_82-50,'82','FontSize',16);
+    text(Q(7)-1,T_81-20,'81','FontSize',16);
+    text(Q(8)-1,T_2-20,'2','FontSize',16);
+   
+    Tvert = linspace(0,750,20);
+    x=linspace(0,100,100);
+    
+    plot(Q(2)*ones(20,1),Tvert,'--'); 
+    plot(Q(3)*ones(20,1),Tvert,'--'); 
+    plot(Q(4)*ones(20,1),Tvert,'--'); 
+    plot(Q(5)*ones(20,1),Tvert,'--');
+    plot(Q(6)*ones(20,1),Tvert,'--');
+    plot(Q(7)*ones(20,1),Tvert,'--');
+    plot(Q(8)*ones(20,1),Tvert,'--');
+    
+    T_4g_vec = T_4g.*ones(1,100);
+    T_5g_vec = T_5g.*ones(1,100);
+    Q8_vec = Q(8).*ones(1,100);
+    y1= T_4g_vec - (T_4g_vec - T_5g_vec).*x ./Q8_vec;
+    Q2_r = round(Q(2));
+    Q4_r = round(Q(4));
+    Q6_r = round(Q(6));
+    Q3_r = round(Q(3));
+    Q5_r = round(Q(5));
+    Q7_r = round(Q(7));
+    ordL1= y1(Q2_r);
+    ordL2= y1(Q4_r);
+    ordL3= y1(Q6_r);
+    ordP= y1(Q3_r);
+    ordK= y1(Q5_r);
+    ordM= y1(Q7_r);
+    
+    plot(Q(2),ordL1,'.r','MarkerSize',14); %text(Q(2),ordL1+20,'L1','FontSize',18);
+    plot(Q(4),ordL2,'.r','MarkerSize',14); %text(Q(4),ordL2+20,'L2','FontSize',18);
+    plot(Q(6),ordL3,'.r','MarkerSize',14); %text(Q(6),ordL3+20,'L3','FontSize',18);
+    plot(Q(3),ordP,'.r','MarkerSize',14); text(Q(3),ordP+20,'P','FontSize',18);
+    plot(Q(5),ordK,'.r','MarkerSize',14); text(Q(5),ordK+20,'K','FontSize',18);
+    plot(Q(7),ordM,'.r','MarkerSize',14); text(Q(7),ordM+20,'M','FontSize',18);
+    
+    set(f3,'Units','Normalized','Position',[0 0 1 1]);
+    title('Heat recovery steam generator diagram','Interpreter','latex','Fontsize',18);
+    xlabel('Q/$Q_{max}$  [\%]','Interpreter','latex','Fontsize',16);
+    ylabel('T [C]','Interpreter','latex','Fontsize',16);
 
 
 end
