@@ -82,7 +82,7 @@ if nargin<3
    if nargin<2
        options=struct();
        if nargin<1
-           P_e=230e3; %[kW]
+           P_e=225e3; %[kW]
        end
    end
 end
@@ -290,7 +290,7 @@ if display ==1
 %     title(['Puissance energetique primaire: ' num2str(Pu_tot*1e-3,'%.1f'),'[MW]'])
 %     
     FIG(4) = figure;
-    label_ex = {['Puissance effective: ',num2str(P_e*1e-6,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(pertes_mec*1e-6,'%.1f'),'[MW]'],['Irreversibilites a la turbine et au compresseur: ',num2str(pertes_rotex*1e-6,'%.1f'),'[MW]'],['Perte à l''échappement: ',num2str(pertes_echex*1e-6,'%.1f'),'[MW]'],['Irreversibilite de la combustion: ',num2str(pertes_combu*1e-6,'%.1f'),'[MW]']};
+    label_ex = {['Puissance effective: ',num2str(P_e*1e-6,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(pertes_mec*1e-6,'%.1f'),'[MW]'],['Irreversibilites a la turbine et au compresseur: ',num2str(pertes_rotex*1e-6,'%.1f'),'[MW]'],['Perte a l''echappement: ',num2str(pertes_echex*1e-6,'%.1f'),'[MW]'],['Irreversibilite de la combustion: ',num2str(pertes_combu*1e-6,'%.1f'),'[MW]']};
     pie([P_e*1e-3;DATEX(1);DATEX(2);DATEX(4);DATEX(3)],label_ex)
     title(['Flux d''exergie primaire: ' num2str(Pprim*1e-6,'%.1f'),'[MW]'])
 end

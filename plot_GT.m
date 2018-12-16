@@ -63,7 +63,7 @@ function [FIG] = plot_GT(DAT,eta_PiT,eta_PiC,x,y,k_cc)
     plot(linS23,linT23,'r')
     plot([DAT(4,3) linS34(2:length(linS34))],[DAT(1,3) linT34(2:length(linT34))],'r')
     title('Diagramme T-s')
-    xlabel('s [kj/kg K]')
+    xlabel('s [kj/kg/K]')
     ylabel('T [°C]')
     hold off
 end

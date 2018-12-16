@@ -537,7 +537,7 @@ if display ==1
     label_ex = {['Puissance effective GT: ',num2str(P_eg*1e-3,'%.1f'),'[MW]'],['Puissance effective ST: ',num2str(P_es*0.001,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(pertesEx_mec*1e-3,'%.1f'),'[MW]'],['Pertes au condenseur: ',num2str(pertesEx_cond*1e-3,'%.1f'),'[MW]'],['Irreversibilites a la turbine et aux pompes: ',num2str(pertesEx_rot_tot*1e-3,'%.1f'),'[MW]'],['Pertes a la cheminee: ',num2str(pertesEx_exh*1e-3,'%.1f'),'[MW]'],['Irreversibilite de la combustion: ',num2str(pertesEx_comb*1e-3,'%.1f'),'[MW]']};
     pie([P_eg;P_es;pertesEx_mec;pertesEx_cond;pertesEx_rot_tot;pertesEx_exh;pertesEx_comb],label_ex)
     title(['Flux d''exergie primaire: ' num2str(fluxEx_prim*1e-3,'%.1f'),'[MW]'])
-
+Qtot = (h4g-h5g)*m_gg;
 
 end
 end
