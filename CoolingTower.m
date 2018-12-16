@@ -159,14 +159,14 @@ m_e4 = m_ev;
 T_e1 = (m_e*Cp_el*(T_e3)-m_as*(ha_out-ha_in))/(m_e1*Cp_el);
 h_e1 = Cp_el*T_e1;
 
-MASSFLOW = [m_e,m_ev,m_as]
+MASSFLOW = [m_e,m_ev,m_as];
 
 DAT_WATER = [T_e1       , T_e2       , T_e3       , T_e4;  %[C]
              h_e1       , h_e2       , h_e3       , h_e4;  %[kJ/kg]
-             m_e1       , m_e2       , m_e3       , m_e4] %[kg/s]
+             m_e1       , m_e2       , m_e3       , m_e4]; %[kg/s]
 DAT_AIR = [Ta_in,   Ta_out;     %[C]
            ha_in,   ha_out;     %[kJ/kg]
            xa_in,   xa_out;     %[-]
-           phia_in, phia_out]  %[-]
+           phia_in, phia_out];  %[-]
 
 end

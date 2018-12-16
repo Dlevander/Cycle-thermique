@@ -64,12 +64,13 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 %   -datex(6) : perte_chemex [kW]
 %   -datex(7) : perte_transex[kW]
 % DAT is a matrix containing :
-% dat = {T_1       , T_2       , ...       , T_6_I,     T_6_II, ... ;  [C]
-%        p_1       , p_2       , ...       , p_6_I,     p_6_II, ... ;  [bar]
-%        h_1       , h_2       , ...       , h_6_I,     h_6_II, ... ;  [kJ/kg]
-%        s_1       , s_2       , ...       , s_6_I,     s_6_II, ... ;  [kJ/kg/K]
-%        e_1       , e_2       , ...       , e_6_I,     e_6_II, ... ;  [kJ/kg]
-%        x_1       , x_2       , ...       , x_6_I,     x_6_II, ... ;   };[-]
+% dat = {T_1, T_2 , T_21 , T_3 , T_4 , T_5 , T_60 , T_61, ..., T_6nsout, ...;  [C]
+%        p_1, p_2 , p_21 , p_3 , p_4 , p_5 , p_60 , p_61, ..., p_6nsout, ...;  [bar]
+%        h_1, h_2 , h_21 , h_3 , h_4 , h_5 , h_60 , h_61, ..., h_6nsout, ...;  [kJ/kg]
+%        s_1, s_2 , s_21 , s_3 , s_4 , s_5 , s_60 , s_61, ..., s_6nsout, ...;  [kJ/kg/K]
+%        e_1, e_2 , e_21 , e_3 , e_4 , e_5 , e_60 , e_61, ..., e_6nsout, ...;  [kJ/kg]
+%        x_1, x_2 , x_21 , x_3 , x_4 , x_5 , x_60 , x_61, ..., x_6nsout, ...;   };[-]
+% ne sont pas mis dans DAT les etats 7x, 10x, 100, 110
 % MASSFLOW is a vector containing :
 %   -massflow(1) = m_a, air massflow [kg/s]
 %   -massflow(2) = m_v, water massflow at 2 [kg/s]
@@ -250,7 +251,7 @@ end
 ETA = zeros(9,1);
 DATEN = zeros(3,1);
 DATEX = zeros(7,1);
-%numEtat = 7+reheat+nsout;
+FIG = 0;
 %% Calcul
 
 %%%%%%%%%%%%%%% ETAT 30 %%%%%%%%%%%%%%%
@@ -483,10 +484,7 @@ elseif nsout>0
     
     %%%%%%%%% Calcul des etat 9x %%%%%%%%
     p9 = [p_80*ones(1,d-1) p_10*ones(1,nsout-d+1)]; % avant bache, p9i = p_80, apres bache p9i = p_10
-    T9 = T7-TpinchEx; %si on considere des echangeurs parfaits
-%     h9ds = XSteam('h_ps',p_10,s7(d));
-%     h9(d)=h7(d)+(h9ds - h7(d))/eta_SiC;
-%     T9(d) = XSteam('T_ph',p_10,h9(d));
+    T9 = T7-TpinchEx;
     h9 = arrayfun( @(p,t) XSteam('h_pT',p,t),p9,T9);
     s9 = arrayfun( @(p,t) XSteam('s_pt',p,t),p9,T9);
     x9 = arrayfun( @(p,h) XSteam('x_ph',p,h),p9,h9);
@@ -527,7 +525,6 @@ elseif nsout>0
     %%%%%%%%% Calcul fraction de soutirage %%%%%%%%%%
     
     [X,h_90] = Soutirage(h6,h7,h_80,h9,h_100,nsout,d);
-    %[X,h_90] = SoutirageTEST(h6,h7,h_80,h9,h_100,nsout,d)
     
     %%%%%%%% Calcul etat 90 %%%%%%%%%%
     p_90 = p_80;
@@ -549,13 +546,14 @@ if reheat == 0
     if nsout > 0
          DAT(:,7:6+nsout) = [T6;p6;h6;s6;e6;x6];
          DAT(:,7+nsout) = [T_70 p_70 h_70 s_70 e_70 x_70]';
+         DAT(:,8+nsout) = [T_80 p_80 h_80 s_80 e_80 x_80]';
+         DAT(:,9+nsout) = [T_90 p_90 h_90 s_90 e_90 x_90]';
+         DAT(:,10+nsout:9+2*nsout) = [T9;p9;h9;s9;e9;x9];
+         %pour plot
          dat7 = [T7;p7;h7;s7;e7;x7];
          dat10 = [T10;p10;h10;s10;e10;x10];
          dat100 = [T_100 p_100 h_100 s_100 e_100 x_100]';
          dat110 = [T_110 p_110 h_110 s_110 e_110 x_110]';
-         DAT(:,8+nsout) = [T_80 p_80 h_80 s_80 e_80 x_80]';
-         DAT(:,9+nsout) = [T_90 p_90 h_90 s_90 e_90 x_90]';
-         DAT(:,10+nsout:9+2*nsout) = [T9;p9;h9;s9;e9;x9];
     end
 elseif reheat == 1
     DAT(:,6) = [T_40 p_40 h_40 s_40 e_40 x_40]';
@@ -666,7 +664,6 @@ CpMoy_f = CPmoy(x_O2, x_CO2,x_H2O,x_N2,[TK_janaf,TK_f]); %[kj/kg/K]
 delta_hf = Cp_f *(TK_f-TK_0);% [kj/kg]
 delta_Sf = CpMoy_f * log(TK_f/TK_0); % [kj/kg*K]
 e_f = delta_hf-TK_0*delta_Sf; % [kj/kg]
-%e_f = 1881; %kJ/kg
 
 Cp_exh = CP(x_O2,x_CO2,x_H2O,x_N2,linspace(TK_janaf,TK_exh,100)); % [kj/kg*K]
 CpMoy_exh = CPmoy(x_O2,x_CO2,x_H2O,x_N2,[TK_janaf,TK_exh]); % [kj/kg*K]
