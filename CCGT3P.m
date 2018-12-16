@@ -1,4 +1,4 @@
-function [ETA,MASSFLOW] = CCGT3P(P_eg,options,display)
+function [ETA MASSFLOW FIG] = CCGT3P(P_eg,options,display)
 % CCGT3P is a Combine cycle Gas Turbine with 2 pressure level
 % CCGT3P(P_e,options,display) compute the thermodynamics states for a CCGT
 % with 3 pressure level (cfr p166 english reference book) including
