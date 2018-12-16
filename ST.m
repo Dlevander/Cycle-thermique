@@ -100,7 +100,7 @@ function [ETA,XMASSFLOW,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = ST(P_e,option
 
 %% YOUR WORK
 
-% Exemple of how to use 'nargin' to check your number of inputs
+% cas reheat == 0 et nsout >4 ne fonctionne pas 
 if nargin<3
     display = 1;
     if nargin<2
@@ -111,9 +111,6 @@ if nargin<3
     end
 end
 
-
-% Exemple of how to use (isfield' to check if an option has been given (or
-% not)
 if isfield(options,'nsout')
     nsout = options.nsout;
 else
@@ -137,7 +134,7 @@ if isfield(options,'p3_hp')
 else
     p3_hp = 200;  % [bar]
 end
-%presence ou non d'une bache de degazage
+
 if isfield(options,'drumFlag')
     drumFlag = options.drumFlag;
 else
@@ -254,12 +251,6 @@ ETA = zeros(9,1);
 DATEN = zeros(3,1);
 DATEX = zeros(7,1);
 %numEtat = 7+reheat+nsout;
-
-DAT= zeros(6,6);
-
-MASSFLOW = 0; %A MODIFIER
-X = zeros(1,nsout);
-FIG = 0; %A MODIFIER
 %% Calcul
 
 %%%%%%%%%%%%%%% ETAT 30 %%%%%%%%%%%%%%%

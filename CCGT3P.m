@@ -502,7 +502,7 @@ MASSFLOW(5) =m_cg;
 
 %% plot
 if display ==1
-    FIG(1) =figure;
+    FIG(3) =figure;
     hold on
     % cloche de base
     T = linspace(0,400,400);
@@ -515,7 +515,6 @@ if display ==1
     Tcloche = [T T];
     plot(cloche,Tcloche,'-b');
     plot([SL(374) SV(374)],[Ttop Ttop],'-b');
-    
     % plot Point
     plot([s_1 s_2 s_81 s_82 s_80 s_90 s_91 s_92 s_101 s_102 s_3 s_4 s_5 s_6 s_7 s_1],[T_1 T_2 T_81 T_82 T_80 T_90 T_91 T_92 T_101 T_102 T_3 T_4 T_5 T_6 T_7 T_1],'*')
     plot([s_91 s_92 s_90 s_4],[T_91 T_92 T_90 T_4],'r')
