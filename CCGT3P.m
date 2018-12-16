@@ -161,10 +161,10 @@ T_STmax = 565;
 x7 =0.95;
 T_7 = 36; %comment faire autrement ? hypothèse
 %% Etats ST
-p_HP=110 ; %bar
-p_IP=28;
-p_LP=4;
-P_es=140000; %kW
+p_HP=122.8 ; %bar
+p_IP=27.3;
+p_LP=3.8;
+P_es=153800; %kW
 
 % Etat de référence
 % T0=15;
