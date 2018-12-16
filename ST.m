@@ -388,6 +388,7 @@ elseif nsout>0
         %%%%%%%%% Calcul etats 6xs et 6x %%%%%%%%
         % nsout -1 pour retirer le sout en sortie de HP, +2 pour le linspace
         h6s_temp = linspace(h_60s,h_50,(nsout+1));
+        h6s = h6s_temp(2:length(h6s_temp)-1);
         s_60s = s_50;
         p6s = arrayfun( @(h) XSteam('p_hs',h,s_60s),h6s);
         
