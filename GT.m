@@ -174,8 +174,6 @@ TK_2=T_2+273.15;
 Cp_12 = 1000*(x_a_N2*mean(janaf('c','N2',linspace(300,TK_2)))+x_a_O2*mean(janaf('c','O2',linspace(300,TK_2)))) ; %J/kg*K faire cp moyen entre T1 et T2 ?
 h_2 = h_1 + Cp_12*(T_2-T_1);
 s_2 = s_1 + (1-eta_PiC)*Cp_12*log((TK_2)/(T_1+273.15)); %eq 3.15
-%h_2=443400;
-%s_2=142;
 e_2 = (h_2-h_1) - (T_ext+273.15)*(s_2-s_1);
 
 %%calcul point 3 : apres la combustion
@@ -185,10 +183,7 @@ p_3 = p_2*k_cc; %pertes de charges dans chambre combustion
 TK_3=T_3+273.15;
 [x_N2,x_O2,x_CO2,x_H2O,R_fum,lambda,ma1,LHV,e_c] = combustion(x,y,T_2,T_3,0);
 Cp_23 = CP(x_O2,x_CO2,x_H2O,x_N2,[TK_2,TK_3])*1000;
-%CpMoy_23 =CPmoy(x_O2,x_CO2,x_H2O,x_N2,[TK_2,TK_3])*1000;
-%Cp_23_2 =(x_N2*mean(janaf('c','N2',linspace(TK_2,TK_3))) + x_O2*mean(janaf('c','O2',linspace(TK_2,TK_3))) + x_CO2*mean(janaf('c','CO2',linspace(TK_2,TK_3))) + x_H2O*mean(janaf('c','H2O',linspace(TK_2,TK_3))))*1000; %faire cp moyen entre T2 et T3 ?
 h_3 = CP(x_O2,x_CO2,x_H2O,x_N2,[300,TK_3])*1000*(T_3-15)+h_1;
-%h_3 =Cp_23*(T_3-T_2) + h_2; %un peu trop petit, h2 et t3 et t2 sont bons 
 s_3 = s_2+ Cp_23*log(TK_3/TK_2) - R_fum*log(p_3/p_2);
 e_3 = (h_3-h_1) - (T_ext+273.15)*(s_3-s_1);
 
@@ -197,7 +192,6 @@ p_4 = p_1 ;% atm
 T_4 = transf_poly('detente',T_3,p_4/p_3,eta_PiT,R_fum,x_CO2,x_H2O,x_O2,x_N2);
 TK_4=T_4+273.15;
 Cp_34 = CP(x_O2,x_CO2,x_H2O,x_N2,[TK_3,TK_4])*1000;
-%Cp_34_2 =(x_N2*mean(janaf('c','N2',linspace(TK_3,TK_4))) + x_O2*mean(janaf('c','O2',linspace(TK_3,TK_4))) + x_CO2*mean(janaf('c','CO2',linspace(TK_3,TK_4))) + x_H2O*mean(janaf('c','H2O',linspace(TK_3,TK_4))))*1000;
 h_4 = h_3 + Cp_34*(T_4-T_3);
 s_4 = s_3 - Cp_34*log(TK_4/TK_3)* ((1-eta_PiT)/eta_PiT);%eq3.16
 e_4 = (h_4-h_1) - (T_ext+273.15)*(s_4-s_1);
@@ -211,7 +205,6 @@ DAT(:,4) = [T_4 p_4 h_4 s_4 e_4]';
 %%Rendements energetiques %%
 P_e=P_e*10^3;
 eta_cyclen = 1-(((1+1/(lambda*ma1))*h_4-h_1)/((1+1/(lambda*ma1))*h_3-h_2)); %eq3.12
-%eta_toten = eta_mec*eta_cyclen; %eta_mec=P_e/(P_T-P_C)
 W_T = h_3-h_4; %J/kg
 W_C = h_2-h_1;
 
@@ -221,15 +214,10 @@ m_g = m_a+m_c;
 eta_toten = P_e/(LHV*1000*m_c);
 eta_mec = eta_toten/eta_cyclen;
 
-% m_c=P_e/(LHV*1000*eta_toten);%debit comb
-% m_a=lambda*ma1*m_c;%debit air
-% m_g=m_a+m_c;%debit fumees
-
-%% rendement exergÃ©tique
+%% rendement exergetique
 
 eta_cyclex=(m_g*(h_3-h_4)-m_a*(h_2-h_1))/(m_g*e_3-m_a*e_2);
 eta_rotex=(m_g*(h_3-h_4)-m_a*(h_2-h_1))/(m_g*(e_3-e_4)-m_a*(e_2-e_1));
-%eta_combex=(m_g*e_3-m_a*e_2)/(m_g*h_3-m_a*h_2);%eq3.36 sans prendre en compte f
 eta_combex = (m_g*e_3-m_a*e_2)/(m_c*e_c*1000); %eq3.36 avec e_c = 52215 pour CH4
 eta_totex=eta_cyclex*eta_mec*eta_combex; %p124
 
@@ -272,7 +260,6 @@ COMBUSTION.LHV = LHV ;
 COMBUSTION.e_c = e_c ;
 COMBUSTION.lambda = lambda ;
 COMBUSTION.Cp_g = CP(x_O2,x_CO2,x_H2O,x_N2,400+273.15);
-%COMBUSTION.Cp_g  = (x_N2*janaf('c','N2',400) + x_O2*janaf('c','O2',400) + x_CO2*janaf('c','CO2',400) + x_H2O*janaf('c','H2O',400))*1000;
 COMBUSTION.fum(1) =  x_O2*m_g ;
 COMBUSTION.fum(2) =  x_N2*m_g ;
 COMBUSTION.fum(3) =  x_CO2*m_g;
