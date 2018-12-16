@@ -11,9 +11,9 @@ function [ETA MASSFLOW FIG] = CCGT3P(P_eg,options,display)
 %         be activated)
 % P_EG = electrical power output target for gas turbine [kW]
 % OPTIONS is a structure containing :
-%   -options.T0       [°C] : Reference temperature
-%   -options.T_ext    [°C] : External temperature
-%   -options.T_STmax  [°C] : maximum temperature on ST cycle
+%   -options.T0       [Â°C] : Reference temperature
+%   -options.T_ext    [Â°C] : External temperature
+%   -options.T_STmax  [Â°C] : maximum temperature on ST cycle
 %   -options.eta_mec  [-] : mecanic efficiency of shafts bearings
 %   -options.pdrum   [bar]: Drum pressure
 %   -options.pmid    [bar]: Intermediary pressure level
@@ -82,7 +82,7 @@ end
 if isfield(options,'T_STmax')
     T_STmax = options.T_STmax;
 else
-    T_STmax = 565;   
+    T_STmax = 500;   
 end
 
 if isfield(options,'eta_mec')
@@ -158,11 +158,10 @@ x_N2 = COMBUSTION.fum(2)/m_gg;
 x_H2O = COMBUSTION.fum(4)/m_gg;
 x_CO2 = COMBUSTION.fum(3)/m_gg;
 
-eta_SiT = 0.9; %hypothèse
+eta_SiT = 0.9; %hypothÃ¨se
 eta_SiC = 0.9;
-T_STmax = 565;
 x7 =0.95;
-T_7 = 36; %comment faire autrement ? hypothèse
+T_7 = 36; %comment faire autrement ? hypothÃ¨se
 %% Etats ST
 p_HP=122.8 ; %bar
 p_IP=27.3;
@@ -177,7 +176,7 @@ P_es=153800; %kW
 % s0 = Cp_air_27*log((T_ext+273.15)/273.15); %J/kg*K
 % e0 = 0; % point de reference
 
-%Etat 3 : entrée turbine HP
+%Etat 3 : entrÃ©e turbine HP
 p_3 = p_HP;
 T_3 = T_STmax;
 h_3 = XSteam('h_pT',p_3,T_3);
@@ -212,7 +211,7 @@ s_1 = XSteam('sL_T',T_1);
 e_1 = exergie(h_1,s_1);
 x_1 = 0;
 
-%Etat 2 : après pompe alimentaire
+%Etat 2 : aprÃ¨s pompe alimentaire
 p_2 = p_LP ; 
 h_2s = XSteam('h_ps',p_2,s_1); %h dans le cas isentropique
 h_2=h_1+(h_2s-h_1)/eta_SiC;%h en prenant compte rendement is
@@ -221,15 +220,15 @@ T_2=XSteam('T_ph',p_2,h_2);
 x_2=XSteam('x_ph',p_2,h_2);
 e_2=exergie(h_2,s_2);
 
-% Etat 81 entrée evaporisateur LP
+% Etat 81 entrÃ©e evaporisateur LP
 p_81 = p_LP ;
 T_81 = XSteam('Tsat_p',p_81);
 h_81 = XSteam('hL_p',p_81);
 s_81 = XSteam('sL_p',p_81);
-x_81 = 0; %liquide saturé
+x_81 = 0; %liquide saturÃ©
 e_81 = exergie(h_81,s_81);
 
-%Etat 82 : sortie evap LP, vap saturée
+%Etat 82 : sortie evap LP, vap saturÃ©e
 p_82 = p_81;
 T_82 = T_81;
 h_82 = XSteam('hV_p',p_82);
@@ -237,7 +236,7 @@ s_82 = XSteam('sV_p',p_82);
 x_82 = 1;
 e_82 = exergie(h_82,s_82);
 
-%Etat 91 : entree évap IP, liq saturee
+%Etat 91 : entree Ã©vap IP, liq saturee
 p_91 = p_IP ;
 T_91 = XSteam('Tsat_p',p_91);
 h_91 = XSteam('hL_p',p_91);
@@ -524,11 +523,11 @@ if display ==1
     grid on
     title('Diagramme T-s')
     xlabel('s [kj/kg/K]')
-    ylabel('T [�C]')
+    ylabel('T [°C]')
     hold off
     %plot pie chart energetique
     FIG(4)= figure;
-    label_en = {['Puissance effective GT: ',num2str(P_eg*1e-3,'%.1f'),'[MW]'],['Puissance effective ST: ',num2str(P_es*0.001,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(pertesEx_mec*1e-3,'%.1f'),'[MW]'],['Pertes au condenseur: ',num2str(pertesEn_cond*1e-3,'%.1f'),'[MW]'],['Pertes � la chemin�e: ',num2str(pertesEn_chem*1e-3,'%.1f'),'[MW]']};
+    label_en = {['Puissance effective GT: ',num2str(P_eg*1e-3,'%.1f'),'[MW]'],['Puissance effective ST: ',num2str(P_es*0.001,'%.1f'),'[MW]'],['Pertes mecaniques: ',num2str(pertesEx_mec*1e-3,'%.1f'),'[MW]'],['Pertes au condenseur: ',num2str(pertesEn_cond*1e-3,'%.1f'),'[MW]'],['Pertes à la cheminée: ',num2str(pertesEn_chem*1e-3,'%.1f'),'[MW]']};
     pie([P_eg;P_es;pertesEx_mec;pertesEn_cond;pertesEn_chem],label_en)
     title(['Puissance energetique primaire: ' num2str(P_primTGV*1e-3,'%.1f'),'[MW]'])
     %plot pie chart energetique
