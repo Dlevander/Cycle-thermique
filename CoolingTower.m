@@ -20,7 +20,7 @@ function [DAT_WATER,DAT_AIR,MASSFLOW] = CoolingTower(P_w,options)
 %   -options.Phi_out [-]: Maximum relative humidity of air at the cooling
 %                         tower outlet.
 %
-% OUTPUT :
+% OUTPUT :m
 % MassFlow [kg/s]: Vector containing the different massflow :
 %   -massflow(1) : water massflow at the condenser
 %   -massflow(2) : additionnal water massflow = water flow evaporated
@@ -59,7 +59,7 @@ end
 if isfield(options,'Tcond')
     Tcond = options.Tcond;
 else
-    Tcond = 30; %[C]
+    Tcond = 47; %[C]
 end
 
 if isfield(options,'Tpinch')
@@ -71,7 +71,7 @@ end
 if isfield(options,'Tw_out')
     Tw_out = options.Tw_out;
 else
-    Tw_out = 43; %[C]
+    Tw_out = Tcond-Tpinch; %[C]
 end
 
 if isfield(options,'Tw_in')
