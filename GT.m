@@ -82,7 +82,7 @@ if nargin<3
    if nargin<2
        options=struct();
        if nargin<1
-           P_e=230e3; %[kW]
+           P_e=225e3; %[kW]
        end
    end
 end
