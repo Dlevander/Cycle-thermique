@@ -12,7 +12,7 @@ function [ETA,DATEN,DATEX,DAT,MASSFLOW,COMBUSTION,FIG] = GT(P_e,options,display)
 %   -options.k_mec [-] : Shaft losses 
 %   -options.T_0   [C] : Reference temperature
 %   -options.T_ext [C] : External temperature
-%   -options.r     [-] : Comperssion ratio
+%   -options.r     [-] : Compression ratio
 %   -options.k_cc  [-] : Coefficient of pressure losses due to combustion
 %                        chamber
 %   -options.T_3   [C] : Temperature after combustion (before turbine)
@@ -152,7 +152,7 @@ MASSFLOW = zeros(3,1);
 
 FIG = 0; %A MODIFIER
 
-%%%%% Calcul des Ã©tats %%%%%%
+%%%%% Calcul des etats %%%%%%
 R_air = 287.1; %J/kg.K 
 x_a_O2 = 0.21*32/28.96; %fraction massique de O2 dans l'air
 x_a_N2 = 0.79*28/28.96; %fraction massique de N2 dans l'air
