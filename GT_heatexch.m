@@ -160,7 +160,7 @@ DATEN = zeros(2,1);
 
 DATEX = zeros(4,1);
 
-DAT= zeros(5,4);
+DAT= zeros(5,6);
 
 MASSFLOW = zeros(3,1); 
 
@@ -246,8 +246,9 @@ end
 
 DAT(:,1) = [T_1 p_1 h_1 s_1 e_1]';
 DAT(:,2) = [T_2 p_2 h_2 s_2 e_2]';
-DAT(:,3) = [T_3 p_3 h_3 s_3 e_3]';
-DAT(:,4) = [T_4 p_4 h_4 s_4 e_4]';
+DAT(:,3) = [T_21 p_21 h_21 s_21 e_21]';
+DAT(:,4) = [T_3 p_3 h_3 s_3 e_3]';
+DAT(:,5) = [T_4 p_4 h_4 s_4 e_4]';
 %%Rendements énergétiques %%
 P_e=P_e*10^3;
 eta_cyclen = ((1+1/(lambda*ma1))*(h_3-h_4)-(h_2-h_1))/((1+1/(lambda*ma1))*h_3-h_21); %eq3.12
@@ -278,6 +279,7 @@ e_5 = (h_5-h_1) - 273.15*(s_5-s_1);
 m=m+1;
 end
 end
+DAT(:,6) = [T_5 p_5 h_5 s_5 e_5]';
 
 %% rendement exergetique
 
